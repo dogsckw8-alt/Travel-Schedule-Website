@@ -160,8 +160,7 @@ return `
           </div>
           
           <div onclick="openTransportModal('${cleanRoute}')" class="touch-card flex-1 bg-slate-900/90 border border-amber-500/40 hover:border-amber-400 p-3.5 rounded-2xl shadow-md cursor-pointer transition active:scale-[0.98]">
-            <div class="flex items-center justify-between gap-2">
-              <div class="flex items-center gap-2">
+              <div class="flex items-center justify-between gap-2">
                 <span class="text-xl">🚌</span>
                 <div>
                   <h3 class="text-base font-black text-amber-300 leading-snug">
