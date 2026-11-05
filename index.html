@@ -1,0 +1,125 @@
+<!DOCTYPE html>
+<html lang="zh-TW" class="dark">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <title>東京 7 日 6 夜行程手札</title>
+  <!-- Tailwind CSS -->
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script>
+    tailwind.config = {
+      darkMode: 'class',
+      theme: {
+        extend: {
+          colors: {
+            brand: {
+              bg: '#0F1115',       // 溫潤深灰沉浸底色
+              surface: '#161920',  // 卡片材質
+              elevated: '#1F2430', // 高亮抬升材質
+              gold: '#F59E0B',     // 香檳金點綴
+              goldLight: '#FBBF24',
+              text: '#F1F5F9',     // 柔和米白主字
+              muted: '#94A3B8'     // 次要灰色字
+            }
+          }
+        }
+      }
+    }
+  </script>
+  <style>
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+      -webkit-tap-highlight-color: transparent;
+      background-color: #0F1115;
+    }
+    .touch-card {
+      transition: transform 0.15s cubic-bezier(0.4, 0, 0.2, 1), box-shadow 0.15s ease;
+    }
+    .touch-card:active {
+      transform: scale(0.97);
+    }
+    .no-scrollbar::-webkit-scrollbar {
+      display: none;
+    }
+    .no-scrollbar {
+      -ms-overflow-style: none;
+      scrollbar-width: none;
+    }
+  </style>
+</head>
+<body class="bg-brand-bg text-brand-text min-h-screen pb-16 select-none antialiased">
+
+  <!-- 頂部 Contextual Header -->
+  <header class="sticky top-0 bg-[#0F1115]/90 backdrop-blur-xl z-30 px-4 py-3.5 border-b border-slate-800/80 flex justify-between items-center shadow-lg">
+    <div class="flex items-center gap-2">
+      <span class="text-xl">⛩️</span>
+      <h1 class="text-lg font-black text-brand-gold tracking-wide">東京冬日行程手札</h1>
+    </div>
+    <div class="flex items-center gap-2">
+      <button onclick="fetchLatestData()" class="flex items-center gap-2 bg-brand-surface border border-slate-700/60 px-3 py-1.5 rounded-full active:scale-95 transition shadow-inner">
+        <span id="sync-dot" class="w-2.5 h-2.5 rounded-full bg-emerald-400 animate-pulse"></span>
+        <span id="sync-text" class="text-xs text-brand-muted font-extrabold tracking-wider">已同步</span>
+      </button>
+    </div>
+  </header>
+
+  <!-- 動態 Day 膠囊導航列 -->
+  <nav class="sticky top-[57px] bg-[#0F1115]/90 backdrop-blur-xl z-20 px-3 py-2.5 border-b border-slate-800/60 shadow-md">
+    <div id="day-tabs" class="flex gap-2.5 overflow-x-auto no-scrollbar px-1">
+      <!-- 由 JS 動態生成 Day 膠囊按鈕 -->
+    </div>
+  </nav>
+
+  <!-- 第一層：貫穿式時間軸與內容主體 -->
+  <main class="max-w-md mx-auto px-4 pt-6 relative">
+    <!-- 發光時間軸連線 -->
+    <div class="absolute left-[39px] top-6 bottom-6 w-0.5 bg-gradient-to-b from-brand-gold/50 via-slate-700 to-slate-800 z-0"></div>
+    <div id="timeline-container" class="space-y-6 relative z-10">
+      <!-- 由 JS 動態生成行程卡片與體能看板 -->
+    </div>
+  </main>
+
+  <!-- 第二層：Bottom Sheet Modal (景點/餐廳/交通詳情) -->
+  <div id="modal-overlay" class="fixed inset-0 bg-black/80 backdrop-blur-sm z-40 flex flex-col justify-end hidden opacity-0 transition-opacity duration-300" onclick="closeModal(event)">
+    <div id="modal-sheet" class="bg-brand-surface border-t border-slate-700/80 rounded-t-[2.5rem] max-h-[88vh] flex flex-col overflow-hidden transform translate-y-full transition-transform duration-300 ease-out shadow-2xl" onclick="event.stopPropagation()">
+
+      <!-- Modal 頂部控制列與抓手 -->
+      <div class="px-5 pt-3 pb-2 flex justify-between items-center border-b border-slate-800/80 flex-shrink-0">
+        <div id="modal-back-btn-container"></div>
+        <div class="w-10 h-1.5 bg-slate-700/80 rounded-full mx-auto"></div>
+        <button onclick="closeModalDirect()" class="text-slate-400 hover:text-white p-1 text-2xl font-bold leading-none">✕</button>
+      </div>
+
+      <!-- 可滾動內容主體 -->
+      <div class="p-5 space-y-5 overflow-y-auto flex-1 no-scrollbar">
+        <!-- Header & 大圖 Banner -->
+        <div id="modal-header" class="space-y-3"></div>
+
+        <!-- 核心資訊網格 -->
+        <div id="modal-grid" class="grid grid-cols-2 gap-3 text-slate-200"></div>
+
+        <!-- 轉乘/行程分段明細 (交通專用卡片) -->
+        <div id="modal-transit-steps" class="space-y-4 hidden"></div>
+
+        <!-- 提醒、SubSpots 微型時間軸、順遊下一站區塊 -->
+        <div id="modal-alerts" class="space-y-4"></div>
+      </div>
+
+      <!-- 吸底導航與動作按鈕 -->
+      <div id="modal-actions" class="p-4 bg-brand-surface border-t border-slate-800 flex gap-3 z-10 flex-shrink-0"></div>
+    </div>
+  </div>
+
+  <!-- 第三層：Lightbox 全螢幕圖片/時刻表預覽 Modal -->
+  <div id="lightbox-overlay" class="fixed inset-0 bg-black/95 z-50 flex items-center justify-center hidden opacity-0 transition-opacity duration-200 p-4" onclick="closeLightbox()">
+    <button onclick="closeLightbox()" class="absolute top-5 right-5 text-slate-400 hover:text-white text-2xl font-black z-50 p-2 bg-brand-surface/80 rounded-full w-11 h-11 flex items-center justify-center border border-slate-700">✕</button>
+    <div class="relative max-w-full max-h-full flex items-center justify-center" onclick="event.stopPropagation()">
+      <img id="lightbox-img" src="" alt="圖片預覽" class="max-w-full max-h-[85vh] rounded-2xl object-contain shadow-2xl transform scale-95 transition-transform duration-200 border border-slate-800">
+      <div id="lightbox-caption" class="absolute bottom-[-2.5rem] text-center text-xs font-black text-slate-300 bg-brand-surface/90 px-4 py-1.5 rounded-full border border-slate-700 shadow-md"></div>
+    </div>
+  </div>
+
+  <!-- 載入核心模組 -->
+  <script type="module" src="./js/app.js"></script>
+</body>
+</html>
