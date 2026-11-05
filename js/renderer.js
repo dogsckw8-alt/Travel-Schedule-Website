@@ -143,15 +143,20 @@ export function renderTimeline(currentDayKey) {
       const feeBadge = formatFeeDisplay(feeVal);
       const timetableRaw = transInfo.Timetable || transInfo['特定班次'] || transInfo.TimeTable || '';
       const targetTime = extractTargetClass(timetableRaw);
+      const transTimes = slot.time.split(/→|➔/).map(t => t.trim());
+      const transStart = transTimes[0] || slot.time;
+      const transEnd = transTimes[1] || '';
 
       const targetBadge = targetTime
         ? `<span class="bg-rose-950/90 text-rose-300 border border-rose-600/80 px-2.5 py-1 rounded-lg text-xs font-black flex items-center gap-1 shadow-sm">🎯 目標班次 ${targetTime}</span>`
         : '';
 
-      return `
+return `
         <div class="flex items-start gap-3 relative z-10">
-          <div class="w-12 pt-2 flex-shrink-0 text-right">
-            <span class="text-base font-black text-amber-400 bg-slate-900 px-1 py-0.5 rounded border border-amber-500/30">${slot.time}</span>
+          <div class="w-16 pt-1 flex flex-col items-center flex-shrink-0">
+            <span class="text-xs font-black text-amber-400 bg-slate-900 px-1 py-0.5 rounded border border-amber-500/30 w-full text-center">${transStart}</span>
+            <span class="text-xs text-amber-400/80 my-0.5">⬇</span>
+            ${transEnd ? `<span class="text-xs font-black text-amber-400 bg-slate-900 px-1 py-0.5 rounded border border-amber-500/30 w-full text-center">${transEnd}</span>` : ''}
           </div>
           
           <div onclick="openTransportModal('${cleanRoute}')" class="touch-card flex-1 bg-slate-900/90 border border-amber-500/40 hover:border-amber-400 p-3.5 rounded-2xl shadow-md cursor-pointer transition active:scale-[0.98]">
