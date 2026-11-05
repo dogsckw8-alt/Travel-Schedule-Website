@@ -65,24 +65,26 @@ export async function fetchLatestData() {
   // 若有設定真實 API URL 可在此處發起 fetch
 }
 
+// 取得全域設定，若 window.CONFIG 不存在則給予預設空物件
+const config = window.CONFIG || { GAS_API_URL: "" };
+
 function initTravelApp() {
-  // 檢查是否有掛載 Mock Data，若無則啟用 Fallback 保護
-  const data = window.mockTravelData || getDefaultFallbackData();
-  
-  if (!data) {
-    console.error('[App Error] 找不到有效的旅遊資料，請確認 Mock Data 載入順序。');
+  if (!config.GAS_API_URL) {
+    console.warn("[App Notice] 偵測到尚未設定 GAS_API_URL，已自動切換為本地 Mock Data 模式。");
+    
+    // 直接使用您在 index.html 宣告的 window.mockTravelData
+    if (window.mockTravelData) {
+      renderApp(window.mockTravelData);
+    } else {
+      console.error("[App Error] 找不到 window.mockTravelData 資料！");
+    }
     return;
   }
 
-  // 執行首次渲染
-  renderApp(data);
-  console.log('[App Success] 應用程式初始化完成，可執行 runParserCheckpoint() 進行測試。');
+  // 如果有填寫 GAS_API_URL，才去遠端 Fetch 資料
+  fetchDataFromGAS(config.GAS_API_URL);
 }
 
-function getDefaultFallbackData() {
-  // 提供基本的結構化預設值，避免畫面完全卡死
-  return { days: [], meta: { title: "Default Travel Data" } };
-}
 
 /* ----------------------------------------------------
    用戶操作事件 (Controllers)
