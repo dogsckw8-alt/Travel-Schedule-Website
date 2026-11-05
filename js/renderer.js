@@ -151,9 +151,9 @@ export function renderTimeline(currentDayKey) {
         ? `<span class="bg-rose-950/90 text-rose-300 border border-rose-600/80 px-2.5 py-1 rounded-lg text-xs font-black flex items-center gap-1 shadow-sm">🎯 目標班次 ${targetTime}</span>`
         : '';
 
-return `
+    return `
         <div class="flex items-start gap-3 relative z-10">
-          <div class="w-16 pt-1 flex flex-col items-center flex-shrink-0">
+          <div class="w-14 pt-1 flex flex-col items-end flex-shrink-0 pr-1">
             <span class="text-xs font-black text-amber-400 bg-slate-900 px-1 py-0.5 rounded border border-amber-500/30 w-full text-center">${transStart}</span>
             <span class="text-xs text-amber-400/80 my-0.5">⬇</span>
             ${transEnd ? `<span class="text-xs font-black text-amber-400 bg-slate-900 px-1 py-0.5 rounded border border-amber-500/30 w-full text-center">${transEnd}</span>` : ''}
