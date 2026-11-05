@@ -155,7 +155,7 @@ export function renderTimeline(currentDayKey) {
         <div class="flex items-start gap-3 relative z-10">
           <div class="w-14 pt-1 flex flex-col items-center flex-shrink-0 relative">
             <span class="text-lg font-black text-amber-400 bg-slate-900 px-1 py-0.5 rounded border border-amber-500/30 w-full text-center">${transStart}</span>
-            <span class="text-lg text-amber-400/90 my-0.5 inline-flex items-center justify-center w-full leading-none -translate-x-[2px]">↓</span>
+            <span class="text-xxl text-amber-400/90 my-0.5 inline-flex items-center justify-center w-full leading-none -translate-x-[2px]">↓</span>
             ${transEnd ? `<span class="text-lg font-black text-amber-400 bg-slate-900 px-1 py-0.5 rounded border border-amber-500/30 w-full text-center">${transEnd}</span>` : ''}
           </div>
           
