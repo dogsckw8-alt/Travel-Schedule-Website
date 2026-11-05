@@ -140,7 +140,17 @@ export function toggleSubspotCheck(parentSpot, subspotName, checkboxEl) {
     }
   }
 }
-
+/* ----------------------------------------------------
+   🗺️ 生成連續地圖導航 URL 輔助函式
+---------------------------------------------------- */
+export function buildContinuousMapUrl(mainSpot, subSpots) {
+  if (!subSpots || subSpots.length === 0) {
+    return `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(mainSpot)}`;
+  }
+  // 將主景點與子景點串接為多點導航路徑
+  const waypoints = subSpots.map(s => s.name).join('|');
+  return `https://www.google.com/maps/dir/?api=1&origin=${encodeURIComponent(mainSpot)}&destination=${encodeURIComponent(subSpots[subSpots.length - 1].name)}&waypoints=${encodeURIComponent(waypoints)}`;
+}
 /* ----------------------------------------------------
    🧪 Checkpoint 2 (CP2): TDD 診斷驗證腳本
 ---------------------------------------------------- */
