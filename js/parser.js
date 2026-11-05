@@ -165,6 +165,3 @@ export function runParserCheckpoint() {
   console.groupEnd();
   return { status: "success", parsedSubs, targetClass, depTime };
 }
-
-// 掛載至全域方便在瀏覽器 Console 執行驗證
-window.runParserCheckpoint = runParserCheckpoint;
