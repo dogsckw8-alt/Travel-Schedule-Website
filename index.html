@@ -119,8 +119,13 @@
     </div>
   </div>
 
-  <!-- 載入核心模組 -->
-  <script type="module" src="./js/app.js"></script>
+<!-- 1. 先載入靜態 Mock 資料 -->
+<script src="./js/mock-data.js"></script>
+
+<!-- 2. 最後載入 ES Module 主入口 -->
+<script type="module" src="./js/app.js"></script>
+
+
   <script>
   // 🧪 模擬測試資料 (Mock Data for Checkpoint 1 & UI Validation)
   window.mockTravelData = {

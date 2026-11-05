@@ -65,6 +65,25 @@ export async function fetchLatestData() {
   // 若有設定真實 API URL 可在此處發起 fetch
 }
 
+function initTravelApp() {
+  // 檢查是否有掛載 Mock Data，若無則啟用 Fallback 保護
+  const data = window.mockTravelData || getDefaultFallbackData();
+  
+  if (!data) {
+    console.error('[App Error] 找不到有效的旅遊資料，請確認 Mock Data 載入順序。');
+    return;
+  }
+
+  // 執行首次渲染
+  renderApp(data);
+  console.log('[App Success] 應用程式初始化完成，可執行 runParserCheckpoint() 進行測試。');
+}
+
+function getDefaultFallbackData() {
+  // 提供基本的結構化預設值，避免畫面完全卡死
+  return { days: [], meta: { title: "Default Travel Data" } };
+}
+
 /* ----------------------------------------------------
    用戶操作事件 (Controllers)
 ---------------------------------------------------- */
