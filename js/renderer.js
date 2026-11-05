@@ -153,9 +153,9 @@ export function renderTimeline(currentDayKey) {
 
     return `
         <div class="flex items-start gap-3 relative z-10">
-          <div class="w-14 pt-1 flex flex-col items-end flex-shrink-0 pr-1">
-            <span class="text-xs font-black text-amber-400 bg-slate-900 px-1 py-0.5 rounded border border-amber-500/30 w-full text-center">${transStart}</span>
-            <span class="text-xs text-amber-400/80 my-0.5">⬇</span>
+          <div class="w-14 pt-1 flex flex-col items-center flex-shrink-0 relative">
+            <span class="text-lg font-black text-amber-400 bg-slate-900 px-1 py-0.5 rounded border border-amber-500/30 w-full text-center">${transStart}</span>
+            <span class="text-lg text-amber-400/80 my-0.5">⬇</span>
             ${transEnd ? `<span class="text-xs font-black text-amber-400 bg-slate-900 px-1 py-0.5 rounded border border-amber-500/30 w-full text-center">${transEnd}</span>` : ''}
           </div>
           
