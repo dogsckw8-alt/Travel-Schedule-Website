@@ -152,11 +152,11 @@ export function renderTimeline(currentDayKey) {
         : '';
 
 return `
-        <div class="flex items-start gap-3 relative z-10">
-          <div class="w-20 pt-0.5 flex flex-col items-center flex-shrink-0">
-            <span class="text-sm font-black text-amber-400 bg-slate-900 px-1.5 py-0.5 rounded border border-amber-500/30 w-full text-center shadow-sm">${transStart}</span>
-            <span class="text-base font-black text-amber-400 my-0.5">⬇</span>
-            ${transEnd ? `<span class="text-sm font-black text-amber-400 bg-slate-900 px-1.5 py-0.5 rounded border border-amber-500/30 w-full text-center shadow-sm">${transEnd}</span>` : ''}
+        <div class="flex items-stretch gap-3 relative z-10 py-1">
+          <div class="w-20 py-1 flex flex-col items-center justify-between flex-shrink-0">
+            <span class="text-xs font-black text-amber-400 bg-slate-900 px-1.5 py-0.5 rounded border border-amber-500/30 w-full text-center shadow-sm">${transStart}</span>
+            <span class="text-base font-black text-amber-400 my-1">⬇</span>
+            ${transEnd ? `<span class="text-xs font-black text-amber-400 bg-slate-900 px-1.5 py-0.5 rounded border border-amber-500/30 w-full text-center shadow-sm">${transEnd}</span>` : ''}
           </div>
           
           <div onclick="openTransportModal('${cleanRoute}')" class="touch-card flex-1 bg-slate-900/90 border border-amber-500/40 hover:border-amber-400 p-3.5 rounded-2xl shadow-md cursor-pointer transition active:scale-[0.98]">
@@ -238,8 +238,8 @@ return `
 
     return `
       <div class="flex items-start gap-3 relative z-10">
-        <div class="w-12 pt-2 flex-shrink-0 text-right">
-          <span class="text-lg font-extrabold ${parsedNotice.queueTime ? 'text-amber-300 underline underline-offset-2' : 'text-amber-400'} block">
+        <div class="w-20 pt-2 flex-shrink-0 text-right">
+          <span class="text-base font-extrabold ${parsedNotice.queueTime ? 'text-amber-300 underline underline-offset-2' : 'text-amber-400'} block">
             ${displayTime}
           </span>
         </div>
