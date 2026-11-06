@@ -259,45 +259,51 @@
       }
     });
 
-  /* ----------------------------------------------------
-     2. 手勢操作優化 (Pointer Events: 右滑完成 / 左滑防誤觸)
-  ---------------------------------------------------- */
-    let startX = 0, startY = 0, currentCard = null;
+ /* ----------------------------------------------------
+   手勢操作優化 (Pointer Events: 即時跟隨、右滑完成)
+---------------------------------------------------- */
+  let startX = 0, startY = 0, currentCard = null, currentDeltaX = 0;
 
-    document.addEventListener('pointerdown', (e) => {
-      const card = e.target.closest('.touch-card');
-      if (!card) return;
-      startX = e.clientX;
-      startY = e.clientY;
-      currentCard = card;
-    });
+  document.addEventListener('pointerdown', (e) => {
+    const card = e.target.closest('.touch-card');
+    if (!card) return;
+    startX = e.clientX;
+    startY = e.clientY;
+    currentCard = card;
+    currentDeltaX = 0;
+    currentCard.style.transition = 'none';
+  });
 
-    document.addEventListener('pointerup', (e) => {
-      if (!currentCard) return;
+  document.addEventListener('pointermove', (e) => {
+    if (!currentCard) return;
+    const diffX = e.clientX - startX;
+    const diffY = e.clientY - startY;
 
-      const diffX = e.clientX - startX;
-      const diffY = e.clientY - startY;
-
-      // 門檻：水平移動須大於 70px 且水平偏移大於垂直偏移 (避免干擾頁面上下滾動)
-      if (Math.abs(diffX) > Math.abs(diffY) && Math.abs(diffX) > 70) {
-        if (diffX > 0) {
-          // 👉 右滑 (Swipe Right)：將該卡片標記為已造訪 / 完成
-          currentCard.style.transform = 'translateX(40px)';
-          currentCard.style.opacity = '0.4';
-          currentCard.classList.add('line-through', 'grayscale');
-        
-          // 帶有平滑下沉動畫
-          setTimeout(() => {
-            currentCard.style.transform = 'translateY(10px)';
-          }, 150);
-        } else {
-          // 👈 左滑 (Swipe Left)：故意留白不執行任何動作，徹底避免長輩上下滾動時誤觸亂跳
-          currentCard.style.transform = '';
-        }
+    if (Math.abs(diffX) > Math.abs(diffY) && Math.abs(diffX) > 10) {
+      currentDeltaX = diffX;
+      if (diffX > 0) {
+        currentCard.style.transform = `translateX(${Math.min(diffX * 0.6, 60)}px)`;
+        currentCard.style.opacity = `${1 - (diffX / 300)}`;
       }
-  
-      currentCard = null;
-    });
+    }
+  });
+
+  document.addEventListener('pointerup', () => {
+    if (!currentCard) return;
+    currentCard.style.transition = 'transform 0.25s cubic-bezier(0.16, 1, 0.3, 1), opacity 0.25s ease';
+
+    if (currentDeltaX > 65) {
+      currentCard.classList.toggle('card-completed');
+      currentCard.style.transform = '';
+      currentCard.style.opacity = '';
+    } else {
+      currentCard.style.transform = '';
+      currentCard.style.opacity = '';
+    }
+
+    currentCard = null;
+    currentDeltaX = 0;
+  });
 
   /* ----------------------------------------------------
      3. 底部浮動 Sticky Header 滾動視口動態追蹤 Logic
