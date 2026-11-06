@@ -35,7 +35,7 @@
       --text-primary: #F1F5F9;
       --text-muted: #94A3B8;
       --inner-box-bg: rgba(30, 41, 59, 0.6);
-    }  
+    }
 
     /* 戶外強光高對比日間模式 (Light Mode) */
     body.light-mode {
@@ -49,7 +49,7 @@
 
     body {
       font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
-      -webkit-tap-highlight-color: transparent; 
+      -webkit-tap-highlight-color: transparent;
       background-color: var(--bg-main);
       color: var(--text-primary);
       transition: background-color 0.3s ease, color 0.3s ease;
@@ -71,57 +71,39 @@
       border-color: var(--card-border) !important;
     }
 
-    .no-scrollbar::-webkit-scrollbar { display: none; }
-    .no-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
-  </style>
+    /* 確保 Light 模式下 Modal 與 Header 背景正確 */
+    body.light-mode header,
+    body.light-mode nav {
+      background-color: rgba(248, 250, 252, 0.9) !important;
+      border-color: #CBD5E1 !important;
+    }
+
+    body.light-mode [id*="modal-sheet"] {
+      background-color: #FFFFFF !important;
+      border-color: #CBD5E1 !important;
+      color: #0F172A !important;
+    }
+
+    .no-scrollbar::-webkit-scrollbar {
+      display: none;
+    }
+    .no-scrollbar {
+      -ms-overflow-style: none;
+      scrollbar-width: none;
+    }
   </style>
 </head>
-<body class="dark-mode min-h-screen pb-16 select-none antialiased">
-
+<body class="dark min-h-screen pb-24 select-none antialiased">
 
   <!-- 頂部 Contextual Header -->
-<header class="sticky top-0 bg-[#0F1115]/90 backdrop-blur-xl z-30 px-4 py-3.5 border-b border-slate-800/80 flex justify-between items-center shadow-lg transition-colors">
-  <div class="flex items-center gap-2">
-    <span class="text-xl">⛩️</span>
-    <h1 class="text-lg font-black text-brand-gold tracking-wide">東京冬日行程手札</h1>
-  </div>
-  <div class="flex items-center gap-2">
-    <!-- ☀️ / 🌙 日夜模式切換膠囊按鈕 (放置於 Mock 標籤左側) -->
-    <button onclick="toggleThemeMode()" id="theme-toggle-btn" class="flex items-center gap-1.5 bg-brand-surface border border-slate-700/60 px-3 py-1.5 rounded-full active:scale-95 transition shadow-inner text-xs font-bold text-amber-400">
-      <span id="theme-icon">🌙</span>
-      <span id="theme-text" class="hidden sm:inline">夜間</span>
-    </button>
-
-    <button onclick="fetchLatestData()" class="flex items-center gap-2 bg-brand-surface border border-slate-700/60 px-3 py-1.5 rounded-full active:scale-95 transition shadow-inner">
-      <span id="sync-dot" class="w-2.5 h-2.5 rounded-full bg-emerald-400 animate-pulse"></span>
-      <span id="sync-text" class="text-xs text-brand-muted font-extrabold tracking-wider">已同步</span>
-    </button>
-  </div>
-</header>
-
-<!-- 動態 Day 膠囊導航列 -->
-<nav class="sticky top-[57px] bg-[#0F1115]/90 backdrop-blur-xl z-20 px-3 py-2.5 border-b border-slate-800/60 shadow-md transition-colors">
-  <div id="day-tabs" class="flex gap-2.5 overflow-x-auto no-scrollbar px-1"></div>
-</nav>
-
-<!-- 📌 底部吸底 Sticky Time Header (最高圖層 z-50，不再被卡片遮擋) -->
-<div id="sticky-time-header" class="fixed bottom-4 left-4 right-4 max-w-md mx-auto z-50 px-4 py-3 bg-amber-500/95 backdrop-blur-md text-slate-950 font-black text-sm rounded-2xl flex items-center justify-between shadow-2xl transition-all duration-300 transform translate-y-20 opacity-0 border border-amber-300/40">
-  <div class="flex items-center gap-2 overflow-hidden">
-    <span class="text-base flex-shrink-0">📌</span>
-    <span id="sticky-time-badge" class="bg-slate-950 text-amber-300 px-2 py-0.5 rounded-md text-xs flex-shrink-0" style="font-variant-numeric: tabular-nums;">--:--</span>
-    <span id="sticky-title-badge" class="truncate font-extrabold">進行中行程載入中...</span>
-  </div>
-  <span class="text-xs bg-slate-950/10 px-2 py-1 rounded-lg flex-shrink-0 ml-2 font-bold">當前進度</span>
-</div>
-  <!-- 頂部 Contextual Header -->
-  <header class="sticky top-0 backdrop-blur-xl z-30 px-4 py-3.5 border-b border-slate-800/80 flex justify-between items-center shadow-lg transition-colors duration-200">
+  <header class="sticky top-0 backdrop-blur-xl z-30 px-4 py-3.5 border-b border-slate-800/80 flex justify-between items-center shadow-lg transition-colors">
     <div class="flex items-center gap-2">
       <span class="text-xl">⛩️</span>
       <h1 class="text-lg font-black text-brand-gold tracking-wide">東京冬日行程手札</h1>
     </div>
     <div class="flex items-center gap-2">
-      <!-- ☀️ / 🌙 日夜模式切換按鈕 (置於資料同步膠囊左側) -->
-      <button onclick="toggleThemeMode()" id="theme-toggle-btn" class="flex items-center gap-1.5 bg-brand-surface border border-slate-700/60 px-3 py-1.5 rounded-full active:scale-95 transition shadow-inner text-xs font-bold">
+      <!-- ☀️ / 🌙 日夜模式切換膠囊按鈕 -->
+      <button onclick="toggleThemeMode()" id="theme-toggle-btn" class="flex items-center gap-1.5 bg-brand-surface border border-slate-700/60 px-3 py-1.5 rounded-full active:scale-95 transition shadow-inner text-xs font-bold text-amber-400">
         <span id="theme-icon">🌙</span>
         <span id="theme-text" class="hidden sm:inline">夜間</span>
       </button>
@@ -135,21 +117,11 @@
   </header>
 
   <!-- 動態 Day 膠囊導航列 -->
-  <nav class="sticky top-[57px] backdrop-blur-xl z-20 px-3 py-2.5 border-b border-slate-800/60 shadow-md transition-colors duration-200">
+  <nav class="sticky top-[57px] backdrop-blur-xl z-20 px-3 py-2.5 border-b border-slate-800/60 shadow-md transition-colors">
     <div id="day-tabs" class="flex gap-2.5 overflow-x-auto no-scrollbar px-1">
       <!-- 由 JS 動態生成 Day 膠囊按鈕 -->
     </div>
   </nav>
-
-  <!-- 📌 頂部釘選時間列 (Sticky Time Header - 隨捲動即時顯示現在進行式) -->
-  <div id="sticky-time-header" class="sticky top-[115px] z-10 px-4 py-2 bg-brand-gold/90 backdrop-blur-md text-slate-950 font-black text-sm flex items-center justify-between shadow-md transition-all duration-300 transform -translate-y-full opacity-0">
-    <div class="flex items-center gap-2">
-      <span>📌 目前進行中：</span>
-      <span id="sticky-time-badge" class="bg-slate-950 text-amber-300 px-2 py-0.5 rounded text-xs" style="font-variant-numeric: tabular-nums;">--:--</span>
-      <span id="sticky-title-badge" class="truncate max-w-[200px] sm:max-w-xs">載入中...</span>
-    </div>
-    <span class="text-xs opacity-80">下滑查看更多</span>
-  </div>
 
   <!-- 第一層：貫穿式時間軸與內容主體 -->
   <main class="max-w-md mx-auto px-4 pt-6 relative">
@@ -159,6 +131,16 @@
       <!-- 由 JS 動態生成行程卡片與體能看板 -->
     </div>
   </main>
+
+  <!-- 📌 底部吸底 Sticky Time Header (最高圖層 z-50，不再被卡片遮擋) -->
+  <div id="sticky-time-header" class="fixed bottom-4 left-4 right-4 max-w-md mx-auto z-50 px-4 py-3 bg-amber-500/95 backdrop-blur-md text-slate-950 font-black text-sm rounded-2xl flex items-center justify-between shadow-2xl transition-all duration-300 transform translate-y-20 opacity-0 border border-amber-300/40">
+    <div class="flex items-center gap-2 overflow-hidden">
+      <span class="text-base flex-shrink-0">📌</span>
+      <span id="sticky-time-badge" class="bg-slate-950 text-amber-300 px-2 py-0.5 rounded-md text-xs flex-shrink-0" style="font-variant-numeric: tabular-nums;">--:--</span>
+      <span id="sticky-title-badge" class="truncate font-extrabold">進行中行程載入中...</span>
+    </div>
+    <span class="text-xs bg-slate-950/10 px-2 py-1 rounded-lg flex-shrink-0 ml-2 font-bold">當前進度</span>
+  </div>
 
   <!-- 第二層：Bottom Sheet Modal (景點/餐廳/交通詳情) -->
   <div id="modal-overlay" class="fixed inset-0 bg-black/80 backdrop-blur-sm z-40 flex flex-col justify-end hidden opacity-0 transition-opacity duration-300" onclick="closeModal(event)">
@@ -200,40 +182,42 @@
     </div>
   </div>
 
-<script type="module" src="./js/app.js"></script>
+  <!-- 業務邏輯模組 -->
+  <script type="module" src="./js/app.js"></script>
 
   <script>
-  <script>
-  /* ----------------------------------------------------
-     1. 戶外強光與日夜模式切換 (CSS Variables Token 驅動)
-  ---------------------------------------------------- */
+    /* ----------------------------------------------------
+       1. 戶外強光與日夜模式切換 (CSS Variables Token 驅動)
+    ---------------------------------------------------- */
     function toggleThemeMode() {
       const body = document.body;
       const themeIcon = document.getElementById('theme-icon');
       const themeText = document.getElementById('theme-text');
-    
+      
       const isLight = body.classList.toggle('light-mode');
-      body.classList.toggle('dark-mode', !isLight);
+      body.classList.toggle('dark', !isLight);
 
       themeIcon.textContent = isLight ? '☀️' : '🌙';
       themeText.textContent = isLight ? '日間' : '夜間';
       localStorage.setItem('travel_theme_mode', isLight ? 'light' : 'dark');
     }
 
-  // 初始化載入主題設定
+    // 初始化載入主題設定
     window.addEventListener('DOMContentLoaded', () => {
       const savedTheme = localStorage.getItem('travel_theme_mode');
       if (savedTheme === 'light') {
         document.body.classList.add('light-mode');
-        document.body.classList.remove('dark-mode');
-        document.getElementById('theme-icon').textContent = '☀️';
-        document.getElementById('theme-text').textContent = '日間';
+        document.body.classList.remove('dark');
+        const themeIcon = document.getElementById('theme-icon');
+        const themeText = document.getElementById('theme-text');
+        if (themeIcon) themeIcon.textContent = '☀️';
+        if (themeText) themeText.textContent = '日間';
       }
     });
 
-  /* ----------------------------------------------------
-     2. 手勢操作優化 (Pointer Events: 右滑完成 / 左滑防誤觸)
-  ---------------------------------------------------- */
+    /* ----------------------------------------------------
+       2. 手勢操作優化 (Pointer Events: 右滑完成 / 左滑防誤觸)
+    ---------------------------------------------------- */
     let startX = 0, startY = 0, currentCard = null;
 
     document.addEventListener('pointerdown', (e) => {
@@ -257,23 +241,23 @@
           currentCard.style.transform = 'translateX(40px)';
           currentCard.style.opacity = '0.4';
           currentCard.classList.add('line-through', 'grayscale');
-        
+          
           // 帶有平滑下沉動畫
           setTimeout(() => {
             currentCard.style.transform = 'translateY(10px)';
           }, 150);
         } else {
-          // 👈 左滑 (Swipe Left)：故意留白不執行任何動作，徹底避免長輩上下滾動時誤觸亂跳
+          // 👈 左滑 (Swipe Left)：故意留白不執行任何動作，徹底避免上下滾動時誤觸亂跳
           currentCard.style.transform = '';
         }
       }
-  
+
       currentCard = null;
     });
 
-  /* ----------------------------------------------------
-     3. 底部浮動 Sticky Header 滾動視口動態追蹤 Logic
-  ---------------------------------------------------- */
+    /* ----------------------------------------------------
+       3. 底部浮動 Sticky Header 滾動視口動態追蹤 Logic
+    ---------------------------------------------------- */
     window.addEventListener('scroll', () => {
       const stickyHeader = document.getElementById('sticky-time-header');
       if (!stickyHeader) return;
@@ -282,7 +266,7 @@
       if (window.scrollY > 150) {
         stickyHeader.classList.remove('translate-y-20', 'opacity-0');
         stickyHeader.classList.add('translate-y-0', 'opacity-100');
-  
+
         // 🔍 視口動態計算：找到離螢幕上半部最接近的卡片項目
         const cards = document.querySelectorAll('#timeline-container .touch-card');
         let currentActiveCard = null;
@@ -304,8 +288,10 @@
           const timeText = timeEl ? timeEl.textContent.trim() : '進行中';
           const titleText = titleEl ? titleEl.textContent.trim() : '行程';
 
-          document.getElementById('sticky-time-badge').textContent = timeText;
-          document.getElementById('sticky-title-badge').textContent = titleText;
+          const timeBadge = document.getElementById('sticky-time-badge');
+          const titleBadge = document.getElementById('sticky-title-badge');
+          if (timeBadge) timeBadge.textContent = timeText;
+          if (titleBadge) titleBadge.textContent = titleText;
         }
       } else {
         stickyHeader.classList.add('translate-y-20', 'opacity-0');
@@ -313,131 +299,131 @@
       }
     });
   </script>
-  
+
   <script>
-  // 🧪 模擬測試資料 (Mock Data for Checkpoint 1 & UI Validation)
-  window.mockTravelData = {
-    "status": "success",
-    "updatedAt": "2026/12/13 下午 2:00:00",
-    "schedule": {
-      "days": ["2026-12-13", "2026-12-14", "2026-12-15"],
-      "timeline": {
-        "2026-12-13": {
-          "items": [
-            { "time": "09:00", "name": "淺草寺 | 雷門與仲見世通", "duration": 120, "departure": "11:00", "notice": "09:00開店 | 建議早訪避開人潮" },
-            { "time": "11:00➔11:15", "name": "淺草➔上野", "duration": 15, "departure": "11:15", "notice": "" },
-            { "time": "11:15", "name": "上野恩賜公園", "duration": 90, "departure": "12:45", "notice": "賞景散步" },
-            { "time": "12:45➔13:00", "name": "上野➔秋葉原", "duration": 15, "departure": "13:00", "notice": "" },
-            { "time": "13:00", "name": "鳥貴族 秋葉原店", "duration": 90, "departure": "14:30", "notice": "已預約午餐" }
-          ],
-          "fitness": {
-            "status": "🟢",
-            "summaryText": "🟢 輕鬆漫遊 | 預估步數: 5,420 步 | 總步行: 38 分鐘 (2.6 km)"
-          }
-        },
-        "2026-12-14": {
-          "items": [
-            { "time": "10:00", "name": "築地場外市場", "duration": 100, "departure": "11:40", "notice": "🔥 建議 10:00 排隊品嚐海鮮丼" },
-            { "time": "11:40➔12:00", "name": "築地➔銀座", "duration": 20, "departure": "12:00", "notice": "" },
-            { "time": "12:00", "name": "銀座商圈散策", "duration": 150, "departure": "14:30", "notice": "步行購物" }
-          ],
-          "fitness": {
-            "status": "🟡",
-            "summaryText": "🟡 中度負荷 | 預估步數: 8,900 步 | 總步行: 65 分鐘 (4.5 km)"
-          }
-        },
-        "2026-12-15": {
-          "items": [
-            { "time": "08:30", "name": "箱根湯本溫泉旅館", "duration": 120, "departure": "10:30", "notice": "退房並寄放行李" }
-          ],
-          "fitness": {
-            "status": "🟢",
-            "summaryText": "🟢 輕鬆漫遊 | 預估步數: 2,100 步 | 總步行: 15 分鐘 (1.0 km)"
+    /* 🧪 模擬測試資料 (Mock Data for Checkpoint 1 & UI Validation) */
+    window.mockTravelData = {
+      "status": "success",
+      "updatedAt": "2026/12/13 下午 2:00:00",
+      "schedule": {
+        "days": ["2026-12-13", "2026-12-14", "2026-12-15"],
+        "timeline": {
+          "2026-12-13": {
+            "items": [
+              { "time": "09:00", "name": "淺草寺 | 雷門與仲見世通", "duration": 120, "departure": "11:00", "notice": "09:00開店 | 建議早訪避開人潮" },
+              { "time": "11:00➔11:15", "name": "淺草➔上野", "duration": 15, "departure": "11:15", "notice": "" },
+              { "time": "11:15", "name": "上野恩賜公園", "duration": 90, "departure": "12:45", "notice": "賞景散步" },
+              { "time": "12:45➔13:00", "name": "上野➔秋葉原", "duration": 15, "departure": "13:00", "notice": "" },
+              { "time": "13:00", "name": "鳥貴族 秋葉原店", "duration": 90, "departure": "14:30", "notice": "已預約午餐" }
+            ],
+            "fitness": {
+              "status": "🟢",
+              "summaryText": "🟢 輕鬆漫遊 | 預估步數: 5,420 步 | 總步行: 38 分鐘 (2.6 km)"
+            }
+          },
+          "2026-12-14": {
+            "items": [
+              { "time": "10:00", "name": "築地場外市場", "duration": 100, "departure": "11:40", "notice": "🔥 建議 10:00 排隊品嚐海鮮丼" },
+              { "time": "11:40➔12:00", "name": "築地➔銀座", "duration": 20, "departure": "12:00", "notice": "" },
+              { "time": "12:00", "name": "銀座商圈散策", "duration": 150, "departure": "14:30", "notice": "步行購物" }
+            ],
+            "fitness": {
+              "status": "🟡",
+              "summaryText": "🟡 中度負荷 | 預估步數: 8,900 步 | 總步行: 65 分鐘 (4.5 km)"
+            }
+          },
+          "2026-12-15": {
+            "items": [
+              { "time": "08:30", "name": "箱根湯本溫泉旅館", "duration": 120, "departure": "10:30", "notice": "退房並寄放行李" }
+            ],
+            "fitness": {
+              "status": "🟢",
+              "summaryText": "🟢 輕鬆漫遊 | 預估步數: 2,100 步 | 總步行: 15 分鐘 (1.0 km)"
+            }
           }
         }
+      },
+      "restaurants": {
+        "鳥貴族 秋葉原店": {
+          "Type": "餐廳",
+          "Rest.Type": "居酒屋",
+          "District": "秋葉原",
+          "AvgCost": "3000",
+          "Tabelog評分": "3.45",
+          "Hours": "17:00 - 05:00",
+          "Comment": "平價美味的均一價居酒屋，人氣很高。",
+          "Gmap_URL": "https://maps.google.com/?q=Torikizoku+Akihabara"
+        }
+      },
+      "attractions": {
+        "淺草寺 | 雷門與仲見世通": {
+          "Type": "觀光景點",
+          "District": "台東區",
+          "AvgCost": "0",
+          "Hours": "06:00 - 17:00",
+          "Story": "東京最古老的寺廟，以巨大的紅燈籠「雷門」聞名於世。",
+          "SubSpots": "09:00 雷門拍紀念照 [拍照熱點] | 09:30 仲見世通商店街吃人形燒 [美食,伴手禮] | 10:15 本堂參拜與求籤",
+          "Gmap_URL": "https://maps.google.com/?q=Senso-ji"
+        },
+        "上野恩賜公園": {
+          "Type": "觀光景點",
+          "District": "台東區",
+          "AvgCost": "0",
+          "Hours": "05:00 - 23:00",
+          "Story": "日本第一座公園，文化氣息濃厚，四季景色優美。",
+          "Gmap_URL": "https://maps.google.com/?q=Ueno+Park"
+        },
+        "築地場外市場": {
+          "Type": "美食景點",
+          "District": "中央區",
+          "AvgCost": "2500",
+          "Hours": "05:00 - 14:00",
+          "Story": "雖批發市場已搬遷，但場外市場依然保留了熱鬧的美食與海鮮小吃文化。",
+          "Gmap_URL": "https://maps.google.com/?q=Tsukiji+Outer+Market"
+        },
+        "銀座商圈散策": {
+          "Type": "購物休閒",
+          "District": "中央區",
+          "AvgCost": "5000",
+          "Hours": "10:00 - 20:00",
+          "Gmap_URL": "https://maps.google.com/?q=Ginza"
+        },
+        "箱根湯本溫泉旅館": {
+          "Type": "住宿",
+          "District": "箱根",
+          "AvgCost": "18000",
+          "BookingStatus": "已確認訂房",
+          "Gmap_URL": "https://maps.google.com/?q=Hakone-Yumoto"
+        }
+      },
+      "transport": {
+        "淺草➔上野": {
+          "From": "淺草",
+          "To": "上野",
+          "Line": "東京地鐵銀座線",
+          "Time": "5 mins",
+          "Fee": "¥180",
+          "RouteTips": "搭乘銀座線直達，無需轉車。",
+          "Timetable": "09:12, 09:18, **09:25**, 09:32"
+        },
+        "上野➔秋葉原": {
+          "From": "上野",
+          "To": "秋葉原",
+          "Line": "JR山手線",
+          "Time": "3 mins",
+          "Fee": "¥150",
+          "Timetable": "12:50, **12:58**, 13:05"
+        },
+        "築地➔銀座": {
+          "From": "築地",
+          "To": "銀座",
+          "Line": "東京地鐵日比谷線",
+          "Time": "3 mins",
+          "Fee": "¥170",
+          "Timetable": "11:45, **11:52**, 12:00"
+        }
       }
-    },
-    "restaurants": {
-      "鳥貴族 秋葉原店": {
-        "Type": "餐廳",
-        "Rest.Type": "居酒屋",
-        "District": "秋葉原",
-        "AvgCost": "3000",
-        "Tabelog評分": "3.45",
-        "Hours": "17:00 - 05:00",
-        "Comment": "平價美味的均一價居酒屋，人氣很高。",
-        "Gmap_URL": "https://maps.google.com/?q=Torikizoku+Akihabara"
-      }
-    },
-    "attractions": {
-      "淺草寺 | 雷門與仲見世通": {
-        "Type": "觀光景點",
-        "District": "台東區",
-        "AvgCost": "0",
-        "Hours": "06:00 - 17:00",
-        "Story": "東京最古老的寺廟，以巨大的紅燈籠「雷門」聞名於世。",
-        "SubSpots": "09:00 雷門拍紀念照 [拍照熱點] | 09:30 仲見世通商店街吃人形燒 [美食,伴手禮] | 10:15 本堂參拜與求籤",
-        "Gmap_URL": "https://maps.google.com/?q=Senso-ji"
-      },
-      "上野恩賜公園": {
-        "Type": "觀光景點",
-        "District": "台東區",
-        "AvgCost": "0",
-        "Hours": "05:00 - 23:00",
-        "Story": "日本第一座公園，文化氣息濃厚，四季景色優美。",
-        "Gmap_URL": "https://maps.google.com/?q=Ueno+Park"
-      },
-      "築地場外市場": {
-        "Type": "美食景點",
-        "District": "中央區",
-        "AvgCost": "2500",
-        "Hours": "05:00 - 14:00",
-        "Story": "雖批發市場已搬遷，但場外市場依然保留了熱鬧的美食與海鮮小吃文化。",
-        "Gmap_URL": "https://maps.google.com/?q=Tsukiji+Outer+Market"
-      },
-      "銀座商圈散策": {
-        "Type": "購物休閒",
-        "District": "中央區",
-        "AvgCost": "5000",
-        "Hours": "10:00 - 20:00",
-        "Gmap_URL": "https://maps.google.com/?q=Ginza"
-      },
-      "箱根湯本溫泉旅館": {
-        "Type": "住宿",
-        "District": "箱根",
-        "AvgCost": "18000",
-        "BookingStatus": "已確認訂房",
-        "Gmap_URL": "https://maps.google.com/?q=Hakone-Yumoto"
-      }
-    },
-    "transport": {
-      "淺草➔上野": {
-        "From": "淺草",
-        "To": "上野",
-        "Line": "東京地鐵銀座線",
-        "Time": "5 mins",
-        "Fee": "¥180",
-        "RouteTips": "搭乘銀座線直達，無需轉車。",
-        "Timetable": "09:12, 09:18, **09:25**, 09:32"
-      },
-      "上野➔秋葉原": {
-        "From": "上野",
-        "To": "秋葉原",
-        "Line": "JR山手線",
-        "Time": "3 mins",
-        "Fee": "¥150",
-        "Timetable": "12:50, **12:58**, 13:05"
-      },
-      "築地➔銀座": {
-        "From": "築地",
-        "To": "銀座",
-        "Line": "東京地鐵日比谷線",
-        "Time": "3 mins",
-        "Fee": "¥170",
-        "Timetable": "11:45, **11:52**, 12:00"
-      }
-    }
-  };
-</script>
+    };
+  </script>
 </body>
 </html>
