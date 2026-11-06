@@ -26,48 +26,40 @@
       }
     }
   </script>
+<!-- index.html (CSS 變數 Tokens 與手勢平滑感修復) -->
   <style>
-    /* ----------------------------------------------------
-       1. CSS Tokens 核心架構 (日/夜模式切換)
-    ---------------------------------------------------- */
     :root {
-      /* Japandi 沉浸暗色調 */
       --bg-main: #0F1115;
       --card-bg: #161920;
-      --card-border: rgba(51, 65, 85, 0.8);
-      --card-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
+      --card-border: rgba(51, 65, 85, 0.7);
+      --card-shadow: 0 4px 14px rgba(0, 0, 0, 0.4);
       --text-primary: #F1F5F9;
       --text-muted: #94A3B8;
-      --inner-box-bg: rgba(30, 41, 59, 0.6);
+      --inner-box-bg: rgba(30, 41, 59, 0.5);
       --header-bg: rgba(15, 17, 21, 0.85);
-      --badge-accent-bg: rgba(217, 119, 6, 0.2);
-      --badge-accent-text: #FBBF24;
       --gold-accent: #F59E0B;
-      
-      /* Light Mode 高對比狀態標籤配色 (夜間預設) */
-      --status-open-bg: rgba(16, 185, 129, 0.15);
-      --status-open-text: #34D399;
-      --status-badge-border: rgba(51, 65, 85, 0.8);
+
+      --timeline-wrap-bg: #0F1115;
+      --time-capsule-bg: #161920;
+      --time-capsule-border: rgba(245, 158, 11, 0.8);
+      --time-text: #F59E0B;
     }
 
-    /* 戶外強光高對比日間模式 (Light Mode - 高視野對比標準) */
     body.light-mode {
       --bg-main: #F8FAFC;
       --card-bg: #FFFFFF;
       --card-border: #CBD5E1;
-      --card-shadow: 0 4px 16px -2px rgba(15, 23, 42, 0.08), 0 2px 6px -1px rgba(15, 23, 42, 0.04);
-      --text-primary: #0F172A; /* 高階深藍灰 */
-      --text-muted: #334155;   /* 更加深色以確保 WCAG AA 高對比 */
+      --card-shadow: 0 4px 16px -2px rgba(15, 23, 42, 0.08);
+      --text-primary: #0F172A;
+      --text-muted: #334155;
       --inner-box-bg: #F1F5F9;
       --header-bg: rgba(248, 250, 252, 0.9);
-      --badge-accent-bg: #FEF3C7;
-      --badge-accent-text: #92400E;
-      --gold-accent: #B45309;
+      --gold-accent: #D97706;
 
-      /* 💡 確保 Light mode 下「營業中/開放中」等標籤具有高對比背景與深色文字 */
-      --status-open-bg: #DCFCE7;
-      --status-open-text: #166534;
-      --status-badge-border: #86EFAC;
+      --timeline-wrap-bg: #F8FAFC;
+      --time-capsule-bg: #FFFFFF;
+      --time-capsule-border: #D97706;
+      --time-text: #D97706;
     }
 
     body {
@@ -78,36 +70,38 @@
       transition: background-color 0.25s ease, color 0.25s ease;
     }
 
-    /* 通用卡片 Tokens 類別 */
     .touch-card {
       background-color: var(--card-bg) !important;
       border-color: var(--card-border) !important;
       color: var(--text-primary) !important;
       box-shadow: var(--card-shadow);
-      transition: transform 0.15s ease, box-shadow 0.15s ease, opacity 0.3s ease;
+      transition: transform 0.2s cubic-bezier(0.16, 1, 0.3, 1), opacity 0.2s ease, box-shadow 0.15s ease;
       touch-action: pan-y;
     }
 
-    /* Bento Grid 內部區塊適配 */
+    .touch-card.card-completed {
+      opacity: 0.45 !important;
+      filter: grayscale(0.8);
+      transform: translateX(12px) scale(0.98);
+    }
+
     .bento-inner {
       background-color: var(--inner-box-bg) !important;
       border-color: var(--card-border) !important;
       color: var(--text-primary) !important;
     }
 
-    /* Header & Navbar 模糊頂部 */
     .sticky-header-blur {
       background-color: var(--header-bg);
       border-color: var(--card-border);
     }
 
-    /* 等寬數字 */
-    .tabular-nums {
-      font-variant-numeric: tabular-nums;
+    .timeline-wrap { background-color: var(--timeline-wrap-bg) !important; }
+    .time-capsule {
+      background-color: var(--time-capsule-bg) !important;
+      border-color: var(--time-capsule-border) !important;
+      color: var(--time-text) !important;
     }
-
-    .no-scrollbar::-webkit-scrollbar { display: none; }
-    .no-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
   </style>
 </head>
 <body class="dark min-h-screen pb-28 select-none antialiased">
