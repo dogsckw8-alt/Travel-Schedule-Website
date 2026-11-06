@@ -4,7 +4,6 @@ import {
   getCleanSpotName, 
   parseDurationMins, 
   getBetweenSpotsTransport,
-  calcDepartureTime, 
   formatMins, 
   formatFeeDisplay, 
   formatHoursDisplay,
@@ -60,7 +59,7 @@ export function renderApp() {
 }
 
 /* ----------------------------------------------------
-   第一層：時間軸卡片渲染 (長輩友善 Bento Grid & Apple Wallet 焦點)
+   第一層：時間軸卡片渲染 (Apple 雙軌優先級 Focus & Bento Grid)
 ---------------------------------------------------- */
 export function renderTimeline(currentDayKey) {
   console.log('正在渲染 Day:', currentDayKey);
@@ -88,7 +87,7 @@ export function renderTimeline(currentDayKey) {
     return;
   }
 
-  // 💡 每日體能與步數預警看板 HTML (字體與高對比優化)
+  // 💡 每日體能與步數預警看板 HTML
   let fitnessBannerHTML = '';
   if (fitnessInfo && fitnessInfo.summaryText) {
     let cardStyle = 'bg-emerald-950/50 border-emerald-700 text-emerald-200';
@@ -114,20 +113,51 @@ export function renderTimeline(currentDayKey) {
   const dateObj = new Date(currentDayKey);
   const weekKey = WEEK_KEYS[dateObj.getDay()] || '';
 
-  // 💡 Apple Wallet 焦點判定：依據當前時間鎖定下一個或正進行中的行程
+  // 💡 Apple 雙軌優先級 Focus 判定邏輯 (Ongoing 優先，其次 Next Up)
   const now = new Date();
   const currentMins = now.getHours() * 60 + now.getMinutes();
   let activeFocusIndex = -1;
 
+  // 軌道一：尋找「正在進行中 (Ongoing)」的項目 (start_time <= current <= departure/end)
   for (let i = 0; i < dayItems.length; i++) {
-    const slotMins = timeToMins(dayItems[i].time || '00:00');
-    if (slotMins >= currentMins) {
+    const slot = dayItems[i];
+    const rawName = slot.name || '';
+    const isTransport = rawName.includes('→') || rawName.includes('➔');
+    
+    const startTimeStr = slot.time ? slot.time.split(/→|➔/)[0].trim() : '00:00';
+    const startMins = timeToMins(startTimeStr);
+    
+    let endMins = startMins;
+    if (slot.departure) {
+      endMins = timeToMins(slot.departure);
+    } else if (slot.duration) {
+      endMins = startMins + Number(slot.duration);
+    } else {
+      endMins = startMins + 30; // 預設 30 分鐘跨距
+    }
+
+    if (currentMins >= startMins && currentMins <= endMins) {
       activeFocusIndex = i;
       break;
     }
   }
+
+  // 軌道二：若無進行中項目，尋找「即將到來 (Next Up)」的第一個未來項目
+  if (activeFocusIndex === -1) {
+    for (let i = 0; i < dayItems.length; i++) {
+      const slot = dayItems[i];
+      const startTimeStr = slot.time ? slot.time.split(/→|➔/)[0].trim() : '00:00';
+      const startMins = timeToMins(startTimeStr);
+      if (startMins > currentMins) {
+        activeFocusIndex = i;
+        break;
+      }
+    }
+  }
+
+  // 預設收尾：若當天行程皆已過，高亮最後一項
   if (activeFocusIndex === -1 && dayItems.length > 0) {
-    activeFocusIndex = dayItems.length - 1; // 若當日行程已過，預設高亮最後一站
+    activeFocusIndex = dayItems.length - 1;
   }
 
   container.innerHTML = fitnessBannerHTML + dayItems.map((slot, idx) => {
@@ -165,6 +195,11 @@ export function renderTimeline(currentDayKey) {
         ? `<span class="bg-rose-950/90 text-rose-300 border border-rose-600 px-3 py-1 rounded-lg text-sm font-black flex items-center gap-1 shadow-sm" style="font-variant-numeric: tabular-nums;">🎯 目標班次 ${targetTime}</span>`
         : '';
 
+      // 💡 解決 Hover 與 Focus 樣式衝突：為高亮狀態與一般狀態配置獨立的平滑互動類別
+      const transportCardClasses = isFocus
+        ? 'bg-slate-900 border-amber-400 ring-2 ring-amber-400/40 shadow-lg shadow-amber-400/10 hover:border-amber-300 hover:ring-amber-300/60'
+        : 'bg-slate-900 border-amber-500/40 hover:border-amber-400';
+
       return `
         <div class="flex items-start gap-3 relative z-10 my-2">
           <!-- 🔒 精準對齊鎖定區塊：絕無毫米偏移 -->
@@ -174,9 +209,7 @@ export function renderTimeline(currentDayKey) {
             ${transEnd ? `<span class="text-lg font-black text-amber-400 bg-slate-900 px-1 py-0.5 rounded border border-amber-500/30 w-full text-center" style="font-variant-numeric: tabular-nums;">${transEnd}</span>` : ''}
           </div>
           
-          <div onclick="openTransportModal('${cleanRoute}')" class="touch-card flex-1 bg-slate-900 border ${
-            isFocus ? 'border-amber-400 ring-2 ring-amber-400/40 bg-slate-900/95' : 'border-amber-500/40'
-          } hover:border-amber-400 p-4 rounded-2xl shadow-md cursor-pointer transition active:scale-[0.98]">
+          <div onclick="openTransportModal('${cleanRoute}')" class="touch-card flex-1 ${transportCardClasses} p-4 rounded-2xl shadow-md cursor-pointer transition-all duration-200 active:scale-[0.98]">
             <div class="flex items-center justify-between gap-2">
               <div class="flex items-center gap-2">
                 <span class="text-2xl">🚌</span>
@@ -250,7 +283,13 @@ export function renderTimeline(currentDayKey) {
     const subSpotsList = parseSubSpots(dbItem.SubSpots);
     
     const durationMins = slot.duration || parseDurationMins(dbItem.Duration);
-    const departureTime = slot.departure || calcDepartureTime(displayTime, durationMins);
+    // 優先採用後端帶出的 departure 欄位
+    const departureTime = slot.departure || '';
+
+    // 💡 解決 Hover 與 Focus 樣式衝突：為景點卡片配置獨立平滑類別
+    const spotCardClasses = isFocus
+      ? 'bg-slate-900 border-amber-400 ring-2 ring-amber-400/40 shadow-lg shadow-amber-400/10 hover:border-amber-300 hover:ring-amber-300/60'
+      : 'bg-slate-900 border-slate-800 hover:border-slate-700';
 
     return `
       <div class="flex items-start gap-3 relative z-10 my-2">
@@ -263,9 +302,7 @@ export function renderTimeline(currentDayKey) {
 
         <div class="flex-1 space-y-3">
           <!-- Bento Grid 卡片主體 -->
-          <div onclick="openDetailModal('${spotName}', '${displayTime}')" class="touch-card bg-slate-900 border ${
-            isFocus ? 'border-amber-400 ring-2 ring-amber-400/40 bg-slate-900/95' : 'border-slate-800'
-          } hover:border-slate-700 p-4 rounded-2xl shadow-lg cursor-pointer transition active:scale-[0.98]">
+          <div onclick="openDetailModal('${spotName}', '${displayTime}')" class="touch-card ${spotCardClasses} p-4 rounded-2xl shadow-lg cursor-pointer transition-all duration-200 active:scale-[0.98]">
             
             <!-- 大標焦點 -->
             <div class="flex items-start justify-between gap-2">
@@ -993,4 +1030,25 @@ function getReservationBadge(status) {
     return `<span class="bg-emerald-950/80 border border-emerald-800 text-emerald-300 text-sm font-bold px-2.5 py-1 rounded-lg">🟢 已預約/不用排</span>`;
   }
   return `<span class="bg-amber-950/80 border border-amber-800 text-amber-300 text-sm font-bold px-2.5 py-1 rounded-lg">🟡 ${status}</span>`;
+}
+
+
+/* ----------------------------------------------------
+   --- 以下為未調用的舊有/備用函式 (Legacy / Unused Helpers) ---
+---------------------------------------------------- */
+
+/**
+ * 舊版離開時間計算函式（目前由 GAS 後端統一提供 slot.departure，故前端未直接調用）
+ */
+function calcDepartureTime(slotTime, durationMins) {
+  if (!slotTime || !durationMins) return '';
+  const cleanTime = slotTime.split(/→|➔/)[0].trim();
+  const [hours, mins] = cleanTime.split(':').map(Number);
+  if (isNaN(hours) || isNaN(mins)) return '';
+  
+  const totalMins = hours * 60 + mins + Number(durationMins);
+  const depHours = Math.floor(totalMins / 60) % 24;
+  const depMins = totalMins % 60;
+  
+  return `${String(depHours).padStart(2, '0')}:${String(depMins).padStart(2, '0')}`;
 }
