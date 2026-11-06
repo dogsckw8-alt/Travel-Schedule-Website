@@ -30,10 +30,50 @@
     body {
       font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
       -webkit-tap-highlight-color: transparent;
-      background-color: #0F1115;
     }
+    /* 預設暗色模式背景 */
+    body.dark-mode {
+      background-color: #0F1115;
+      color: #F1F5F9;
+    }
+    /* 戶外強光高對比日間模式 */
+    body.light-mode {
+      background-color: #F8FAFC;
+      color: #0F172A;
+    }
+    body.light-mode header,
+    body.light-mode nav {
+      background-color: rgba(248, 250, 252, 0.9) !important;
+      border-color: #E2E8F0 !important;
+    }
+    body.light-mode .touch-card,
+    body.light-mode [id*="modal-sheet"] {
+      background-color: #FFFFFF !important;
+      border-color: #CBD5E1 !important;
+      color: #0F172A !important;
+      box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
+    }
+    body.light-mode .bg-brand-surface {
+      background-color: #FFFFFF !important;
+    }
+    body.light-mode .text-brand-text,
+    body.light-mode .text-white {
+      color: #0F172A !important;
+    }
+    body.light-mode .text-slate-300,
+    body.light-mode .text-slate-400,
+    body.light-mode .text-brand-muted {
+      color: #475569 !important;
+    }
+    body.light-mode .bg-slate-800,
+    body.light-mode .bg-slate-900 {
+      background-color: #F1F5F9 !important;
+      border-color: #CBD5E1 !important;
+    }
+
     .touch-card {
-      transition: transform 0.15s cubic-bezier(0.4, 0, 0.2, 1), box-shadow 0.15s ease;
+      transition: transform 0.15s cubic-bezier(0.4, 0, 0.2, 1), box-shadow 0.15s ease, opacity 0.3s ease;
+      touch-action: pan-y; /* 允許上下捲動，配合水平手勢 */
     }
     .touch-card:active {
       transform: scale(0.97);
@@ -47,15 +87,22 @@
     }
   </style>
 </head>
-<body class="bg-brand-bg text-brand-text min-h-screen pb-16 select-none antialiased">
+<body class="dark-mode min-h-screen pb-16 select-none antialiased">
 
   <!-- 頂部 Contextual Header -->
-  <header class="sticky top-0 bg-[#0F1115]/90 backdrop-blur-xl z-30 px-4 py-3.5 border-b border-slate-800/80 flex justify-between items-center shadow-lg">
+  <header class="sticky top-0 backdrop-blur-xl z-30 px-4 py-3.5 border-b border-slate-800/80 flex justify-between items-center shadow-lg transition-colors duration-200">
     <div class="flex items-center gap-2">
       <span class="text-xl">⛩️</span>
       <h1 class="text-lg font-black text-brand-gold tracking-wide">東京冬日行程手札</h1>
     </div>
     <div class="flex items-center gap-2">
+      <!-- ☀️ / 🌙 日夜模式切換按鈕 (置於資料同步膠囊左側) -->
+      <button onclick="toggleThemeMode()" id="theme-toggle-btn" class="flex items-center gap-1.5 bg-brand-surface border border-slate-700/60 px-3 py-1.5 rounded-full active:scale-95 transition shadow-inner text-xs font-bold">
+        <span id="theme-icon">🌙</span>
+        <span id="theme-text" class="hidden sm:inline">夜間</span>
+      </button>
+
+      <!-- 資料同步膠囊 -->
       <button onclick="fetchLatestData()" class="flex items-center gap-2 bg-brand-surface border border-slate-700/60 px-3 py-1.5 rounded-full active:scale-95 transition shadow-inner">
         <span id="sync-dot" class="w-2.5 h-2.5 rounded-full bg-emerald-400 animate-pulse"></span>
         <span id="sync-text" class="text-xs text-brand-muted font-extrabold tracking-wider">已同步</span>
@@ -64,11 +111,21 @@
   </header>
 
   <!-- 動態 Day 膠囊導航列 -->
-  <nav class="sticky top-[57px] bg-[#0F1115]/90 backdrop-blur-xl z-20 px-3 py-2.5 border-b border-slate-800/60 shadow-md">
+  <nav class="sticky top-[57px] backdrop-blur-xl z-20 px-3 py-2.5 border-b border-slate-800/60 shadow-md transition-colors duration-200">
     <div id="day-tabs" class="flex gap-2.5 overflow-x-auto no-scrollbar px-1">
       <!-- 由 JS 動態生成 Day 膠囊按鈕 -->
     </div>
   </nav>
+
+  <!-- 📌 頂部釘選時間列 (Sticky Time Header - 隨捲動即時顯示現在進行式) -->
+  <div id="sticky-time-header" class="sticky top-[115px] z-10 px-4 py-2 bg-brand-gold/90 backdrop-blur-md text-slate-950 font-black text-sm flex items-center justify-between shadow-md transition-all duration-300 transform -translate-y-full opacity-0">
+    <div class="flex items-center gap-2">
+      <span>📌 目前進行中：</span>
+      <span id="sticky-time-badge" class="bg-slate-950 text-amber-300 px-2 py-0.5 rounded text-xs" style="font-variant-numeric: tabular-nums;">--:--</span>
+      <span id="sticky-title-badge" class="truncate max-w-[200px] sm:max-w-xs">載入中...</span>
+    </div>
+    <span class="text-xs opacity-80">下滑查看更多</span>
+  </div>
 
   <!-- 第一層：貫穿式時間軸與內容主體 -->
   <main class="max-w-md mx-auto px-4 pt-6 relative">
@@ -121,6 +178,119 @@
 
 <script type="module" src="./js/app.js"></script>
 
+  <script>
+    /* ----------------------------------------------------
+       ✨ 新增功能 1：戶外強光與日夜模式切換 (Light / Dark Mode)
+    ---------------------------------------------------- */
+    function toggleThemeMode() {
+      const body = document.body;
+      const themeIcon = document.getElementById('theme-icon');
+      const themeText = document.getElementById('theme-text');
+      
+      if (body.classList.contains('dark-mode')) {
+        body.classList.remove('dark-mode');
+        body.classList.add('light-mode');
+        themeIcon.textContent = '☀️';
+        themeText.textContent = '日間';
+        localStorage.setItem('travel_theme_mode', 'light');
+      } else {
+        body.classList.remove('light-mode');
+        body.classList.add('dark-mode');
+        themeIcon.textContent = '🌙';
+        themeText.textContent = '夜間';
+        localStorage.setItem('travel_theme_mode', 'dark');
+      }
+    }
+
+    // 初始化讀取使用者偏好主題
+    window.addEventListener('DOMContentLoaded', () => {
+      const savedTheme = localStorage.getItem('travel_theme_mode');
+      if (savedTheme === 'light') {
+        document.body.classList.remove('dark-mode');
+        document.body.classList.add('light-mode');
+        const themeIcon = document.getElementById('theme-icon');
+        const themeText = document.getElementById('theme-text');
+        if (themeIcon) themeIcon.textContent = '☀️';
+        if (themeText) themeText.textContent = '日間';
+      }
+    });
+
+    /* ----------------------------------------------------
+       ✨ 新增功能 2：手勢操作優化 (右滑完成 / 左滑防誤觸)
+    ---------------------------------------------------- */
+    document.addEventListener('touchstart', handleTouchStart, false);
+    document.addEventListener('touchmove', handleTouchMove, false);
+
+    let xDown = null;
+    let yDown = null;
+    let activeCard = null;
+
+    function handleTouchStart(evt) {
+      const card = evt.target.closest('.touch-card');
+      if (!card) return;
+      xDown = evt.touches[0].clientX;
+      yDown = evt.touches[0].clientY;
+      activeCard = card;
+    }
+
+    function handleTouchMove(evt) {
+      if (!xDown || !yDown || !activeCard) return;
+
+      let xUp = evt.touches[0].clientX;
+      let yUp = evt.touches[0].clientY;
+
+      let xDiff = xUp - xDown;
+      let yDiff = yUp - yDown;
+
+      // 確保是水平滑動大於垂直滑動，避免干擾上下捲動
+      if (Math.abs(xDiff) > Math.abs(yDiff)) {
+        if (xDiff > 80) {
+          // 👉 右滑 (Swipe Right)：標記為已完成
+          activeCard.style.transform = `translateX(${xDiff}px)`;
+          activeCard.style.opacity = '0.5';
+          activeCard.classList.add('line-through');
+          
+          setTimeout(() => {
+            activeCard.style.transition = 'all 0.3s ease';
+            activeCard.style.transform = 'translateY(20px)';
+            activeCard.style.opacity = '0.3';
+          }, 150);
+
+          xDown = null;
+          yDown = null;
+          activeCard = null;
+        } else if (xDiff < -50) {
+          // 👈 左滑 (Swipe Left)：刻意不執行動作，防止長輩誤觸
+          xDown = null;
+          yDown = null;
+        }
+      }
+    }
+
+    /* ----------------------------------------------------
+       ✨ 新增功能 3：頂部釘選時間列 (Sticky Time Headers)
+    ---------------------------------------------------- */
+    window.addEventListener('scroll', () => {
+      const stickyHeader = document.getElementById('sticky-time-header');
+      if (!stickyHeader) return;
+
+      if (window.scrollY > 250) {
+        stickyHeader.classList.remove('-translate-y-full', 'opacity-0');
+        stickyHeader.classList.add('translate-y-0', 'opacity-100');
+        
+        // 自動抓取當前模擬進行中的項目標題更新到釘選列
+        const timeBadge = document.getElementById('sticky-time-badge');
+        const titleBadge = document.getElementById('sticky-title-badge');
+        if (timeBadge && titleBadge) {
+          timeBadge.textContent = "11:15";
+          titleBadge.textContent = "上野恩賜公園 (進行中)";
+        }
+      } else {
+        stickyHeader.classList.add('-translate-y-full', 'opacity-0');
+        stickyHeader.classList.remove('translate-y-0', 'opacity-100');
+      }
+    });
+  </script>
 
   <script>
   // 🧪 模擬測試資料 (Mock Data for Checkpoint 1 & UI Validation)
