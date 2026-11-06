@@ -267,17 +267,22 @@
         stickyHeader.classList.remove('translate-y-20', 'opacity-0');
         stickyHeader.classList.add('translate-y-0', 'opacity-100');
 
-        // 🔍 視口動態計算：找到離螢幕上半部最接近的卡片項目
         const cards = document.querySelectorAll('#timeline-container .touch-card');
         let currentActiveCard = null;
+        const triggerLine = 130; // Day Bar 底部的像素位置
 
-        cards.forEach(card => {
+        // 尋找當前剛好被 Day Bar 覆蓋或正在頂部的卡片
+        for (let i = 0; i < cards.length; i++) {
+          const card = cards[i];
           const rect = card.getBoundingClientRect();
-          // 判斷卡片頂端是否處於視口上半區塊 (0px ~ 400px)
-          if (rect.top <= 400 && rect.bottom >= 100) {
-            currentActiveCard = card;
-          }
-        });
+  
+        // 當卡片頂端小於或等於觸發線（代表已經碰到或被 Day Bar 蓋住）
+        // 且卡片的底部還在觸發線下方（代表它還在畫面中）
+        if (rect.top <= triggerLine && rect.bottom > triggerLine) {
+          currentActiveCard = card;
+          break; // 找到第一張剛好頂住 Day Bar 的卡片就立即鎖定，不再往下找
+        }
+      }
 
         if (currentActiveCard) {
           // 從該卡片 DOM 擷取名稱與時間
