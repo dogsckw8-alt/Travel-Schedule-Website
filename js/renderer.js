@@ -153,10 +153,10 @@ export function renderTimeline(currentDayKey) {
 
     return `
         <div class="flex items-start gap-3 relative z-10">
-          <div class="w-14 pt-1 flex flex-col items-end flex-shrink-0 pr-1">
-            <span class="text-xs font-black text-amber-400 bg-slate-900 px-1 py-0.5 rounded border border-amber-500/30 w-full text-center">${transStart}</span>
-            <span class="text-xs text-amber-400/80 my-0.5">⬇</span>
-            ${transEnd ? `<span class="text-xs font-black text-amber-400 bg-slate-900 px-1 py-0.5 rounded border border-amber-500/30 w-full text-center">${transEnd}</span>` : ''}
+          <div class="w-14 pt-1 flex flex-col items-center flex-shrink-0 relative">
+            <span class="text-lg font-black text-amber-400 bg-slate-900 px-1 py-0.5 rounded border border-amber-500/30 w-full text-center">${transStart}</span>
+            <span class="text-xxxl font-bold text-amber-400/90 my-0.5 inline-flex items-center justify-center w-full leading-none -translate-x-[4px]">↓</span>
+            ${transEnd ? `<span class="text-lg font-black text-amber-400 bg-slate-900 px-1 py-0.5 rounded border border-amber-500/30 w-full text-center">${transEnd}</span>` : ''}
           </div>
           
           <div onclick="openTransportModal('${cleanRoute}')" class="touch-card flex-1 bg-slate-900/90 border border-amber-500/40 hover:border-amber-400 p-3.5 rounded-2xl shadow-md cursor-pointer transition active:scale-[0.98]">
