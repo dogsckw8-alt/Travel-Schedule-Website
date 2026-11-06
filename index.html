@@ -27,68 +27,92 @@
     }
   </script>
   <style>
-    body {
-      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
-      -webkit-tap-highlight-color: transparent;
-    }
-    /* 預設暗色模式背景 */
-    body.dark-mode {
-      background-color: #0F1115;
-      color: #F1F5F9;
-    }
-    /* 戶外強光高對比日間模式 */
+    /* 預設為 Japandi 沉浸暗色調 */
+    :root {
+      --bg-main: #0F1115;
+      --card-bg: #161920;
+      --card-border: rgba(51, 65, 85, 0.8);
+      --text-primary: #F1F5F9;
+      --text-muted: #94A3B8;
+      --inner-box-bg: rgba(30, 41, 59, 0.6);
+    }  
+
+    /* 戶外強光高對比日間模式 (Light Mode) */
     body.light-mode {
-      background-color: #F8FAFC;
-      color: #0F172A;
-    }
-    body.light-mode header,
-    body.light-mode nav {
-      background-color: rgba(248, 250, 252, 0.9) !important;
-      border-color: #E2E8F0 !important;
-    }
-    body.light-mode .touch-card,
-    body.light-mode [id*="modal-sheet"] {
-      background-color: #FFFFFF !important;
-      border-color: #CBD5E1 !important;
-      color: #0F172A !important;
-      box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
-    }
-    body.light-mode .bg-brand-surface {
-      background-color: #FFFFFF !important;
-    }
-    body.light-mode .text-brand-text,
-    body.light-mode .text-white {
-      color: #0F172A !important;
-    }
-    body.light-mode .text-slate-300,
-    body.light-mode .text-slate-400,
-    body.light-mode .text-brand-muted {
-      color: #475569 !important;
-    }
-    body.light-mode .bg-slate-800,
-    body.light-mode .bg-slate-900 {
-      background-color: #F1F5F9 !important;
-      border-color: #CBD5E1 !important;
+      --bg-main: #F8FAFC;
+      --card-bg: #FFFFFF;
+      --card-border: #CBD5E1;
+      --text-primary: #0F172A;
+      --text-muted: #475569;
+      --inner-box-bg: #F1F5F9;
     }
 
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+      -webkit-tap-highlight-color: transparent; 
+      background-color: var(--bg-main);
+      color: var(--text-primary);
+      transition: background-color 0.3s ease, color 0.3s ease;
+    }
+
+    /* 通用卡片類別：直接套用 CSS 變數 */
     .touch-card {
-      transition: transform 0.15s cubic-bezier(0.4, 0, 0.2, 1), box-shadow 0.15s ease, opacity 0.3s ease;
-      touch-action: pan-y; /* 允許上下捲動，配合水平手勢 */
+      background-color: var(--card-bg) !important;
+      border-color: var(--card-border) !important;
+      color: var(--text-primary) !important;
+      transition: transform 0.15s ease, box-shadow 0.15s ease, opacity 0.3s ease;
+      touch-action: pan-y; /* 鎖定縱向捲動，允許橫向 Pointer 手勢 */
     }
-    .touch-card:active {
-      transform: scale(0.97);
+
+    /* Bento Grid 內部小方格適配 */
+    body.light-mode .bg-slate-800\/60,
+    body.light-mode .bg-slate-900 {
+      background-color: var(--inner-box-bg) !important;
+      border-color: var(--card-border) !important;
     }
-    .no-scrollbar::-webkit-scrollbar {
-      display: none;
-    }
-    .no-scrollbar {
-      -ms-overflow-style: none;
-      scrollbar-width: none;
-    }
+
+    .no-scrollbar::-webkit-scrollbar { display: none; }
+    .no-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
+  </style>
   </style>
 </head>
 <body class="dark-mode min-h-screen pb-16 select-none antialiased">
 
+
+  <!-- 頂部 Contextual Header -->
+<header class="sticky top-0 bg-[#0F1115]/90 backdrop-blur-xl z-30 px-4 py-3.5 border-b border-slate-800/80 flex justify-between items-center shadow-lg transition-colors">
+  <div class="flex items-center gap-2">
+    <span class="text-xl">⛩️</span>
+    <h1 class="text-lg font-black text-brand-gold tracking-wide">東京冬日行程手札</h1>
+  </div>
+  <div class="flex items-center gap-2">
+    <!-- ☀️ / 🌙 日夜模式切換膠囊按鈕 (放置於 Mock 標籤左側) -->
+    <button onclick="toggleThemeMode()" id="theme-toggle-btn" class="flex items-center gap-1.5 bg-brand-surface border border-slate-700/60 px-3 py-1.5 rounded-full active:scale-95 transition shadow-inner text-xs font-bold text-amber-400">
+      <span id="theme-icon">🌙</span>
+      <span id="theme-text" class="hidden sm:inline">夜間</span>
+    </button>
+
+    <button onclick="fetchLatestData()" class="flex items-center gap-2 bg-brand-surface border border-slate-700/60 px-3 py-1.5 rounded-full active:scale-95 transition shadow-inner">
+      <span id="sync-dot" class="w-2.5 h-2.5 rounded-full bg-emerald-400 animate-pulse"></span>
+      <span id="sync-text" class="text-xs text-brand-muted font-extrabold tracking-wider">已同步</span>
+    </button>
+  </div>
+</header>
+
+<!-- 動態 Day 膠囊導航列 -->
+<nav class="sticky top-[57px] bg-[#0F1115]/90 backdrop-blur-xl z-20 px-3 py-2.5 border-b border-slate-800/60 shadow-md transition-colors">
+  <div id="day-tabs" class="flex gap-2.5 overflow-x-auto no-scrollbar px-1"></div>
+</nav>
+
+<!-- 📌 底部吸底 Sticky Time Header (最高圖層 z-50，不再被卡片遮擋) -->
+<div id="sticky-time-header" class="fixed bottom-4 left-4 right-4 max-w-md mx-auto z-50 px-4 py-3 bg-amber-500/95 backdrop-blur-md text-slate-950 font-black text-sm rounded-2xl flex items-center justify-between shadow-2xl transition-all duration-300 transform translate-y-20 opacity-0 border border-amber-300/40">
+  <div class="flex items-center gap-2 overflow-hidden">
+    <span class="text-base flex-shrink-0">📌</span>
+    <span id="sticky-time-badge" class="bg-slate-950 text-amber-300 px-2 py-0.5 rounded-md text-xs flex-shrink-0" style="font-variant-numeric: tabular-nums;">--:--</span>
+    <span id="sticky-title-badge" class="truncate font-extrabold">進行中行程載入中...</span>
+  </div>
+  <span class="text-xs bg-slate-950/10 px-2 py-1 rounded-lg flex-shrink-0 ml-2 font-bold">當前進度</span>
+</div>
   <!-- 頂部 Contextual Header -->
   <header class="sticky top-0 backdrop-blur-xl z-30 px-4 py-3.5 border-b border-slate-800/80 flex justify-between items-center shadow-lg transition-colors duration-200">
     <div class="flex items-center gap-2">
@@ -179,119 +203,117 @@
 <script type="module" src="./js/app.js"></script>
 
   <script>
-    /* ----------------------------------------------------
-       ✨ 新增功能 1：戶外強光與日夜模式切換 (Light / Dark Mode)
-    ---------------------------------------------------- */
+  <script>
+  /* ----------------------------------------------------
+     1. 戶外強光與日夜模式切換 (CSS Variables Token 驅動)
+  ---------------------------------------------------- */
     function toggleThemeMode() {
       const body = document.body;
       const themeIcon = document.getElementById('theme-icon');
       const themeText = document.getElementById('theme-text');
-      
-      if (body.classList.contains('dark-mode')) {
-        body.classList.remove('dark-mode');
-        body.classList.add('light-mode');
-        themeIcon.textContent = '☀️';
-        themeText.textContent = '日間';
-        localStorage.setItem('travel_theme_mode', 'light');
-      } else {
-        body.classList.remove('light-mode');
-        body.classList.add('dark-mode');
-        themeIcon.textContent = '🌙';
-        themeText.textContent = '夜間';
-        localStorage.setItem('travel_theme_mode', 'dark');
-      }
+    
+      const isLight = body.classList.toggle('light-mode');
+      body.classList.toggle('dark-mode', !isLight);
+
+      themeIcon.textContent = isLight ? '☀️' : '🌙';
+      themeText.textContent = isLight ? '日間' : '夜間';
+      localStorage.setItem('travel_theme_mode', isLight ? 'light' : 'dark');
     }
 
-    // 初始化讀取使用者偏好主題
+  // 初始化載入主題設定
     window.addEventListener('DOMContentLoaded', () => {
       const savedTheme = localStorage.getItem('travel_theme_mode');
       if (savedTheme === 'light') {
-        document.body.classList.remove('dark-mode');
         document.body.classList.add('light-mode');
-        const themeIcon = document.getElementById('theme-icon');
-        const themeText = document.getElementById('theme-text');
-        if (themeIcon) themeIcon.textContent = '☀️';
-        if (themeText) themeText.textContent = '日間';
+        document.body.classList.remove('dark-mode');
+        document.getElementById('theme-icon').textContent = '☀️';
+        document.getElementById('theme-text').textContent = '日間';
       }
     });
 
-    /* ----------------------------------------------------
-       ✨ 新增功能 2：手勢操作優化 (右滑完成 / 左滑防誤觸)
-    ---------------------------------------------------- */
-    document.addEventListener('touchstart', handleTouchStart, false);
-    document.addEventListener('touchmove', handleTouchMove, false);
+  /* ----------------------------------------------------
+     2. 手勢操作優化 (Pointer Events: 右滑完成 / 左滑防誤觸)
+  ---------------------------------------------------- */
+    let startX = 0, startY = 0, currentCard = null;
 
-    let xDown = null;
-    let yDown = null;
-    let activeCard = null;
-
-    function handleTouchStart(evt) {
-      const card = evt.target.closest('.touch-card');
+    document.addEventListener('pointerdown', (e) => {
+      const card = e.target.closest('.touch-card');
       if (!card) return;
-      xDown = evt.touches[0].clientX;
-      yDown = evt.touches[0].clientY;
-      activeCard = card;
-    }
+      startX = e.clientX;
+      startY = e.clientY;
+      currentCard = card;
+    });
 
-    function handleTouchMove(evt) {
-      if (!xDown || !yDown || !activeCard) return;
+    document.addEventListener('pointerup', (e) => {
+      if (!currentCard) return;
 
-      let xUp = evt.touches[0].clientX;
-      let yUp = evt.touches[0].clientY;
+      const diffX = e.clientX - startX;
+      const diffY = e.clientY - startY;
 
-      let xDiff = xUp - xDown;
-      let yDiff = yUp - yDown;
-
-      // 確保是水平滑動大於垂直滑動，避免干擾上下捲動
-      if (Math.abs(xDiff) > Math.abs(yDiff)) {
-        if (xDiff > 80) {
-          // 👉 右滑 (Swipe Right)：標記為已完成
-          activeCard.style.transform = `translateX(${xDiff}px)`;
-          activeCard.style.opacity = '0.5';
-          activeCard.classList.add('line-through');
-          
+      // 門檻：水平移動須大於 70px 且水平偏移大於垂直偏移 (避免干擾頁面上下滾動)
+      if (Math.abs(diffX) > Math.abs(diffY) && Math.abs(diffX) > 70) {
+        if (diffX > 0) {
+          // 👉 右滑 (Swipe Right)：將該卡片標記為已造訪 / 完成
+          currentCard.style.transform = 'translateX(40px)';
+          currentCard.style.opacity = '0.4';
+          currentCard.classList.add('line-through', 'grayscale');
+        
+          // 帶有平滑下沉動畫
           setTimeout(() => {
-            activeCard.style.transition = 'all 0.3s ease';
-            activeCard.style.transform = 'translateY(20px)';
-            activeCard.style.opacity = '0.3';
+            currentCard.style.transform = 'translateY(10px)';
           }, 150);
-
-          xDown = null;
-          yDown = null;
-          activeCard = null;
-        } else if (xDiff < -50) {
-          // 👈 左滑 (Swipe Left)：刻意不執行動作，防止長輩誤觸
-          xDown = null;
-          yDown = null;
+        } else {
+          // 👈 左滑 (Swipe Left)：故意留白不執行任何動作，徹底避免長輩上下滾動時誤觸亂跳
+          currentCard.style.transform = '';
         }
       }
-    }
+  
+      currentCard = null;
+    });
 
-    /* ----------------------------------------------------
-       ✨ 新增功能 3：頂部釘選時間列 (Sticky Time Headers)
-    ---------------------------------------------------- */
+  /* ----------------------------------------------------
+     3. 底部浮動 Sticky Header 滾動視口動態追蹤 Logic
+  ---------------------------------------------------- */
     window.addEventListener('scroll', () => {
       const stickyHeader = document.getElementById('sticky-time-header');
       if (!stickyHeader) return;
 
-      if (window.scrollY > 250) {
-        stickyHeader.classList.remove('-translate-y-full', 'opacity-0');
+      // 當滾動距離超過 150px 時顯示底部 Sticky Bar
+      if (window.scrollY > 150) {
+        stickyHeader.classList.remove('translate-y-20', 'opacity-0');
         stickyHeader.classList.add('translate-y-0', 'opacity-100');
-        
-        // 自動抓取當前模擬進行中的項目標題更新到釘選列
-        const timeBadge = document.getElementById('sticky-time-badge');
-        const titleBadge = document.getElementById('sticky-title-badge');
-        if (timeBadge && titleBadge) {
-          timeBadge.textContent = "11:15";
-          titleBadge.textContent = "上野恩賜公園 (進行中)";
+  
+        // 🔍 視口動態計算：找到離螢幕上半部最接近的卡片項目
+        const cards = document.querySelectorAll('#timeline-container .touch-card');
+        let currentActiveCard = null;
+
+        cards.forEach(card => {
+          const rect = card.getBoundingClientRect();
+          // 判斷卡片頂端是否處於視口上半區塊 (0px ~ 400px)
+          if (rect.top <= 400 && rect.bottom >= 100) {
+            currentActiveCard = card;
+          }
+        });
+
+        if (currentActiveCard) {
+          // 從該卡片 DOM 擷取名稱與時間
+          const titleEl = currentActiveCard.querySelector('h2, h3');
+          const parentSlot = currentActiveCard.closest('.flex');
+          const timeEl = parentSlot ? parentSlot.querySelector('span[style*="tabular-nums"]') : null;
+
+          const timeText = timeEl ? timeEl.textContent.trim() : '進行中';
+          const titleText = titleEl ? titleEl.textContent.trim() : '行程';
+
+          document.getElementById('sticky-time-badge').textContent = timeText;
+          document.getElementById('sticky-title-badge').textContent = titleText;
         }
       } else {
-        stickyHeader.classList.add('-translate-y-full', 'opacity-0');
+        stickyHeader.classList.add('translate-y-20', 'opacity-0');
         stickyHeader.classList.remove('translate-y-0', 'opacity-100');
       }
     });
   </script>
-
+  
   <script>
   // 🧪 模擬測試資料 (Mock Data for Checkpoint 1 & UI Validation)
   window.mockTravelData = {
