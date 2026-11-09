@@ -233,7 +233,6 @@ export function renderTimeline(currentDayKey) {
       `;
     }
 
-<<<<
     // ⛩️ 景點/餐廳/飯店卡片渲染 (Bento Grid 結構)
     const parsedNotice = parseCellContent(slot);
     const { spotName, subTitle } = parsedNotice;
