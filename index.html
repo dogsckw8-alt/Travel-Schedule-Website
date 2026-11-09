@@ -390,126 +390,108 @@
     /* 🧪 模擬測試資料 (Mock Data for Checkpoint 1 & UI Validation) */
     window.mockTravelData = {
       "status": "success",
-      "updatedAt": "2026/12/13 下午 2:00:00",
+      "apiVersion": "3.1",
+      "schemaVersion": "2026.10",
+      "updatedAt": "2026/11/9 下午4:47:08",
       "schedule": {
-        "days": ["2026-12-13", "2026-12-14", "2026-12-15"],
+        "days": ["2026-12-13", "2026-12-14"],
         "timeline": {
           "2026-12-13": {
+           "fitness": {
+             "totalSteps": 3179,
+             "totalWalkMin": 36,
+             "totalDistM": 2200,
+             "status": "🟢",
+              "summaryText": "🟢 輕鬆漫遊 | 預估步數: 3,179 步 | 總步行: 36 分鐘 (2.2 km)"
+            },
             "items": [
-              { "time": "09:00", "name": "淺草寺 | 雷門與仲見世通", "duration": 120, "departure": "11:00", "notice": "09:00開店 | 建議早訪避開人潮" },
-              { "time": "11:00➔11:15", "name": "淺草➔上野", "duration": 15, "departure": "11:15", "notice": "" },
-              { "time": "11:15", "name": "上野恩賜公園", "duration": 90, "departure": "12:45", "notice": "賞景散步" },
-              { "time": "12:45➔13:00", "name": "上野➔秋葉原", "duration": 15, "departure": "13:00", "notice": "" },
-              { "time": "13:00", "name": "鳥貴族 秋葉原店", "duration": 90, "departure": "14:30", "notice": "已預約午餐" }
-            ],
-            "fitness": {
+             {
+               "time": "07:00",
+               "name": "香港➔深圳車公廟",
+                "duration": 150,
+               "departure": "09:30",
+               "notice": "請提前抵達口岸"
+             }
+           ]
+         },
+         "2026-12-14": {
+           "fitness": {
+             "totalSteps": 5200,
+              "totalWalkMin": 50,
+              "totalDistM": 3500,
               "status": "🟢",
-              "summaryText": "🟢 輕鬆漫遊 | 預估步數: 5,420 步 | 總步行: 38 分鐘 (2.6 km)"
-            }
-          },
-          "2026-12-14": {
-            "items": [
-              { "time": "10:00", "name": "築地場外市場", "duration": 100, "departure": "11:40", "notice": "🔥 建議 10:00 排隊品嚐海鮮丼" },
-              { "time": "11:40➔12:00", "name": "築地➔銀座", "duration": 20, "departure": "12:00", "notice": "" },
-              { "time": "12:00", "name": "銀座商圈散策", "duration": 150, "departure": "14:30", "notice": "步行購物" }
-            ],
-            "fitness": {
-              "status": "🟡",
-              "summaryText": "🟡 中度負荷 | 預估步數: 8,900 步 | 總步行: 65 分鐘 (4.5 km)"
-            }
-          },
-          "2026-12-15": {
-            "items": [
-              { "time": "08:30", "name": "箱根湯本溫泉旅館", "duration": 120, "departure": "10:30", "notice": "退房並寄放行李" }
-            ],
-            "fitness": {
-              "status": "🟢",
-              "summaryText": "🟢 輕鬆漫遊 | 預估步數: 2,100 步 | 總步行: 15 分鐘 (1.0 km)"
-            }
-          }
-        }
-      },
-      "restaurants": {
-        "鳥貴族 秋葉原店": {
-          "Type": "餐廳",
-          "Rest.Type": "居酒屋",
-          "District": "秋葉原",
-          "AvgCost": "3000",
-          "Tabelog評分": "3.45",
-          "Hours": "17:00 - 05:00",
-          "Comment": "平價美味的均一價居酒屋，人氣很高。",
-          "Gmap_URL": "https://maps.google.com/?q=Torikizoku+Akihabara"
-        }
-      },
-      "attractions": {
-        "淺草寺 | 雷門與仲見世通": {
-          "Type": "觀光景點",
-          "District": "台東區",
-          "AvgCost": "0",
-          "Hours": "06:00 - 17:00",
-          "Story": "東京最古老的寺廟，以巨大的紅燈籠「雷門」聞名於世。",
-          "SubSpots": "09:00 雷門拍紀念照 [拍照熱點] | 09:30 仲見世通商店街吃人形燒 [美食,伴手禮] | 10:15 本堂參拜與求籤",
-          "Gmap_URL": "https://maps.google.com/?q=Senso-ji"
-        },
-        "上野恩賜公園": {
-          "Type": "觀光景點",
-          "District": "台東區",
-          "AvgCost": "0",
-          "Hours": "05:00 - 23:00",
-          "Story": "日本第一座公園，文化氣息濃厚，四季景色優美。",
-          "Gmap_URL": "https://maps.google.com/?q=Ueno+Park"
-        },
-        "築地場外市場": {
-          "Type": "美食景點",
-          "District": "中央區",
-          "AvgCost": "2500",
-          "Hours": "05:00 - 14:00",
-          "Story": "雖批發市場已搬遷，但場外市場依然保留了熱鬧的美食與海鮮小吃文化。",
-          "Gmap_URL": "https://maps.google.com/?q=Tsukiji+Outer+Market"
-        },
-        "銀座商圈散策": {
-          "Type": "購物休閒",
-          "District": "中央區",
-          "AvgCost": "5000",
-          "Hours": "10:00 - 20:00",
-          "Gmap_URL": "https://maps.google.com/?q=Ginza"
-        },
-        "箱根湯本溫泉旅館": {
-          "Type": "住宿",
-          "District": "箱根",
-          "AvgCost": "18000",
-          "BookingStatus": "已確認訂房",
-          "Gmap_URL": "https://maps.google.com/?q=Hakone-Yumoto"
-        }
-      },
-      "transport": {
-        "淺草➔上野": {
-          "From": "淺草",
-          "To": "上野",
-          "Line": "東京地鐵銀座線",
-          "Time": "5 mins",
-          "Fee": "¥180",
-          "RouteTips": "搭乘銀座線直達，無需轉車。",
-          "Timetable": "09:12, 09:18, **09:25**, 09:32"
-        },
-        "上野➔秋葉原": {
-          "From": "上野",
-          "To": "秋葉原",
-          "Line": "JR山手線",
-          "Time": "3 mins",
-          "Fee": "¥150",
-          "Timetable": "12:50, **12:58**, 13:05"
-        },
-        "築地➔銀座": {
-          "From": "築地",
-          "To": "銀座",
-          "Line": "東京地鐵日比谷線",
-          "Time": "3 mins",
-          "Fee": "¥170",
-          "Timetable": "11:45, **11:52**, 12:00"
+              "summaryText": "🟢 舒適行程 | 預估步數: 5,200 步 | 總步行: 50 分鐘 (3.5 km)"
+           },
+           "items": [
+            {
+              "time": "09:00",
+              "name": "淺草寺散策",
+              "duration": 120,
+             "departure": "11:00",
+             "notice": ""
+           }
+          ]
         }
       }
-    };
+    },
+  "restaurants": {
+    "一蘭拉麵": {
+      "ID": "JP-TYO-001",
+      "Name": "一蘭拉麵",
+      "Local_Name": "一蘭 浅草店",
+      "City_Name": "東京",
+      "Type": "餐廳",
+      "Rest_Type": "拉麵",
+      "District": "台東區",
+      "Address": "東京都台東区浅草1-1-1",
+      "Hours_summary": "一至日: 24小時",
+      "Hours_json": "{}",
+      "AvgCost": "¥1,200/人",
+      "Rating": "4.2",
+      "Comment_Count": "350",
+      "Res_Mode": "免預約",
+      "SubSpots": "",
+      "Gmap_URL": "https://maps.google.com/?q=Ichiran",
+      "ImageURL": "https://images.unsplash.com/photo-1569718212165-3a8278d5f624",
+      "Duration": "60"
+    }
+  },
+  "attractions": {
+    "淺草寺": {
+      "ID": "JP-TYO-002",
+      "Name": "淺草寺",
+      "Local_Name": "金龍山浅草寺",
+      "City_Name": "東京",
+      "Type": "景點",
+      "Rest_Type": "觀光",
+      "District": "台東區",
+      "Address": "東京都台東区浅草2-3-1",
+      "Hours_summary": "全日開放",
+      "Hours_json": "{}",
+      "AvgCost": "免費",
+      "Rating": "4.6",
+      "Comment_Count": "1200",
+      "Res_Mode": "自由參觀",
+      "SubSpots": "雷門|宝蔵門|本堂",
+      "Gmap_URL": "https://maps.google.com/?q=Senso-ji",
+      "ImageURL": "https://images.unsplash.com/photo-1590534967359-5f7253457a77",
+      "Duration": "90"
+    }
+  },
+  "transport": {
+    "香港➔深圳車公廟": {
+      "ID": "TR-001",
+      "Day": "1",
+      "From": "香港",
+      "To": "深圳車公廟",
+      "Route_Key": "香港➔深圳車公廟",
+      "Time": "150",
+      "Fee": "50.00",
+      "特定班次": "**07:00**,09:30",
+      "Shortcut": "https://..."
+    }
+  }
+};
   </script>
 </body>
 </html>
