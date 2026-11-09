@@ -3,6 +3,9 @@ import { currentData, selectedDayIndex, modalHistory, currentModalItem, setSelec
 import { 
   getCleanSpotName, 
   parseDurationMins, 
+  getSpotRestType,
+  parseAvgCost,
+  parseRatingInfo,
   getBetweenSpotsTransport,
   formatMins, 
   formatFeeDisplay, 
@@ -11,13 +14,15 @@ import {
   parseTimetableList, 
   parseSubSpots, 
   getSubspotCheckKey,
+  toggleSubspotCheck,
   buildContinuousMapUrl, 
   calcMultiLegTime, 
   calcMultiLegFee,
   timeToMins, 
   getBestOpenTime, 
   parseCellContent, 
-  getCardStatusBadge 
+  getCardStatusBadge,
+  calcDepartureTime 
 } from './parser.js';
 
 /* ----------------------------------------------------
@@ -59,7 +64,7 @@ export function renderApp() {
 }
 
 /* ----------------------------------------------------
-   第一層：時間軸卡片渲染 (Apple 雙軌優先級 Focus & Bento Grid)
+   第一層：時間軸卡片渲染 (Apple 雙軌優先級 Focus & Bento Grid v3.1)
 ---------------------------------------------------- */
 export function renderTimeline(currentDayKey) {
   console.log('正在渲染 Day:', currentDayKey);
@@ -70,9 +75,7 @@ export function renderTimeline(currentDayKey) {
   let dayItems = [];
   let fitnessInfo = null;
 
-  if (Array.isArray(timeline)) {
-    dayItems = timeline.filter(slot => slot.items && slot.items[currentDayKey]);
-  } else if (timeline && typeof timeline === 'object') {
+  if (timeline && timeline[currentDayKey]) {
     const dayContent = timeline[currentDayKey];
     if (Array.isArray(dayContent)) {
       dayItems = dayContent;
@@ -113,14 +116,13 @@ export function renderTimeline(currentDayKey) {
   const dateObj = new Date(currentDayKey);
   const weekKey = WEEK_KEYS[dateObj.getDay()] || '';
 
-  // 💡 Apple 雙軌優先級 Focus 判定邏輯 (Ongoing 優先，其次 Next Up)
+  // 💡 Apple 雙軌優先級 Focus 判定邏輯
   const now = new Date();
   const currentMins = now.getHours() * 60 + now.getMinutes();
   let activeFocusIndex = -1;
 
   for (let i = 0; i < dayItems.length; i++) {
     const slot = dayItems[i];
-    const rawName = slot.name || '';
     const startTimeStr = slot.time ? slot.time.split(/→|➔/)[0].trim() : '00:00';
     const startMins = timeToMins(startTimeStr);
     
@@ -156,7 +158,7 @@ export function renderTimeline(currentDayKey) {
   }
 
   container.innerHTML = fitnessBannerHTML + dayItems.map((slot, idx) => {
-    const rawName = slot.name; 
+    const rawName = slot.name || ''; 
     const isTransport = rawName.includes('→') || rawName.includes('➔');
     const isFocus = idx === activeFocusIndex;
 
@@ -168,14 +170,14 @@ export function renderTimeline(currentDayKey) {
 
       const transInfo = findTransportInfo(cleanRoute, routeParts);
 
-      let durationStr = isMultiLeg ? calcMultiLegTime(routeParts) : null;
+      let durationStr = isMultiLeg ? calcMultiLegTime(routeParts, findTransportInfo) : null;
       if (!durationStr) {
         durationStr = formatMins(transInfo.Time || transInfo.Duration);
       }
 
       let feeVal = transInfo.Fee;
       if (isMultiLeg) {
-        const multiFee = calcMultiLegFee(routeParts);
+        const multiFee = calcMultiLegFee(routeParts, findTransportInfo);
         if (multiFee !== null) feeVal = multiFee;
       }
 
@@ -184,21 +186,21 @@ export function renderTimeline(currentDayKey) {
       const targetTime = extractTargetClass(timetableRaw);
       const transTimes = slot.time.split(/→|➔/).map(t => t.trim());
       const transStart = transTimes[0] || slot.time;
-      const transEnd = transTimes[1] || '';
+      const transEnd = transTimes[1] || slot.departure || '';
 
       const targetBadge = targetTime
         ? `<span class="bg-rose-950/90 text-rose-300 border border-rose-600 px-3 py-1 rounded-lg text-sm font-black flex items-center gap-1 shadow-sm" style="font-variant-numeric: tabular-nums;">🎯 目標班次 ${targetTime}</span>`
         : '';
 
       const transportCardClasses = isFocus
-        ? 'bg-slate-900 border-amber-400 ring-2 ring-amber-400/40 shadow-lg shadow-amber-400/10 hover:border-amber-300 hover:ring-amber-300/60'
-        : 'bg-slate-900 border-amber-500/40 hover:border-amber-400';
+        ? 'bg-slate-900 border-amber-400 ring-2 ring-amber-400/40 shadow-lg shadow-amber-400/10'
+        : 'bg-slate-900 border-amber-500/40';
 
       return `
         <div class="flex items-start gap-3 relative z-10 my-2">
           <div class="w-14 pt-1 flex flex-col items-center flex-shrink-0 relative">
             <span class="text-lg font-black text-amber-400 bg-slate-900 px-1 py-0.5 rounded border border-amber-500/30 w-full text-center" style="font-variant-numeric: tabular-nums;">${transStart}</span>
-            <span class="text-xxxl font-bold text-amber-400/90 my-0.5 inline-flex items-center justify-center w-full leading-none -translate-x-[4px]">↓</span>
+            <span class="text-xl font-bold text-amber-400/90 my-0.5 inline-flex items-center justify-center w-full leading-none">↓</span>
             ${transEnd ? `<span class="text-lg font-black text-amber-400 bg-slate-900 px-1 py-0.5 rounded border border-amber-500/30 w-full text-center" style="font-variant-numeric: tabular-nums;">${transEnd}</span>` : ''}
           </div>
           
@@ -226,12 +228,13 @@ export function renderTimeline(currentDayKey) {
       `;
     }
 
-    // ⛩️ 景點/餐廳/飯店卡片渲染 (雙時間點與 Bento Grid 結構)
+    // ⛩️ 景點/餐廳/飯店卡片渲染 (雙時間點與精簡 Bento Grid)
+    const cleanSpotName = getCleanSpotName(rawName);
     const parsedNotice = parseCellContent(slot);
-    const { spotName, subTitle } = parsedNotice;
+    const { subTitle } = parsedNotice;
 
-    const dbItem = (currentData.restaurants && currentData.restaurants[spotName]) || 
-                   (currentData.attractions && currentData.attractions[spotName]) || {};
+    const dbItem = (currentData.restaurants && currentData.restaurants[cleanSpotName]) || 
+                   (currentData.attractions && currentData.attractions[cleanSpotName]) || {};
 
     const displayTime = parsedNotice.queueTime || slot.time;
     const statusBadge = getCardStatusBadge({ slotTime: slot.time, dbItem, parsedNotice, weekKey });
@@ -244,14 +247,14 @@ export function renderTimeline(currentDayKey) {
     let shortWalkHTML = '';
     if (isShortWalkToNext) {
       const nextClean = getCleanSpotName(nextRawName);
-      const matchedTrans = getBetweenSpotsTransport(currentData, spotName, nextClean);
+      const matchedTrans = getBetweenSpotsTransport(currentData, cleanSpotName, nextClean);
 
       if (matchedTrans) {
         const durationStr = formatMins(matchedTrans.Time || matchedTrans.Duration);
         const lineInfo = matchedTrans.Line ? ` (${matchedTrans.Line})` : '';
 
         shortWalkHTML = `
-          <div onclick="openTransportModal('${spotName}➔${nextClean}')" class="flex items-center justify-between bg-slate-900/80 border border-slate-800 hover:border-amber-500/40 px-3.5 py-2.5 rounded-xl cursor-pointer transition my-1.5">
+          <div onclick="openTransportModal('${cleanSpotName}➔${nextClean}')" class="flex items-center justify-between bg-slate-900/80 border border-slate-800 hover:border-amber-500/40 px-3.5 py-2.5 rounded-xl cursor-pointer transition my-1.5">
             <div class="flex items-center gap-2 text-slate-200 font-bold text-sm">
               <span class="text-amber-400 text-base">🚶</span>
               <span>移動至 <strong class="text-amber-300 font-extrabold text-sm">${nextClean}</strong>${lineInfo}</span>
@@ -271,52 +274,58 @@ export function renderTimeline(currentDayKey) {
       }
     }
 
-    const icon = getItemIcon(dbItem.Type || dbItem['Rest.Type'], spotName);
-    const reservationBadge = getReservationBadge(dbItem.reservation || dbItem.BookingStatus);
+    const icon = getItemIcon(dbItem.Type || dbItem['Rest.Type'], cleanSpotName);
+    const reservationBadge = getReservationBadge(dbItem.Res_Mode || dbItem.reservation || dbItem.BookingStatus);
     const subSpotsList = parseSubSpots(dbItem.SubSpots);
     
     const durationMins = slot.duration || parseDurationMins(dbItem.Duration);
     const departureTime = slot.departure || calcDepartureTime(slot.time, durationMins);
 
+    // v3.1 新 Helper 取值
+    const spotRestType = getSpotRestType(dbItem);
+    const avgCostDisplay = parseAvgCost(dbItem);
+    const ratingInfo = parseRatingInfo(dbItem);
+
     const spotCardClasses = isFocus
-      ? 'bg-slate-900 border-amber-400 ring-2 ring-amber-400/40 shadow-lg shadow-amber-400/10 hover:border-amber-300 hover:ring-amber-300/60'
-      : 'bg-slate-900 border-slate-800 hover:border-slate-700';
+      ? 'bg-slate-900 border-amber-400 ring-2 ring-amber-400/40 shadow-lg shadow-amber-400/10'
+      : 'bg-slate-900 border-slate-800';
 
     return `
       <div class="flex items-start gap-3 relative z-10 my-2">
         <div class="w-14 pt-1 flex flex-col items-center flex-shrink-0 relative">
           <span class="text-lg font-black text-amber-400 bg-slate-900 px-1 py-0.5 rounded border border-amber-500/30 w-full text-center" style="font-variant-numeric: tabular-nums;">${displayTime}</span>
-          <span class="text-xxxl font-bold text-amber-400/90 my-0.5 inline-flex items-center justify-center w-full leading-none -translate-x-[4px]">↓</span>
+          <span class="text-xl font-bold text-amber-400/90 my-0.5 inline-flex items-center justify-center w-full leading-none">↓</span>
           <span class="text-lg font-black text-amber-400 bg-slate-900 px-1 py-0.5 rounded border border-amber-500/30 w-full text-center" style="font-variant-numeric: tabular-nums;">${departureTime || '--:--'}</span>
         </div>
 
         <div class="flex-1 space-y-3">
-          <div onclick="openDetailModal('${spotName}', '${displayTime}')" class="touch-card ${spotCardClasses} p-4 rounded-2xl shadow-lg cursor-pointer transition-all duration-200 active:scale-[0.98]">
+          <div onclick="openDetailModal('${cleanSpotName}', '${displayTime}')" class="touch-card ${spotCardClasses} p-4 rounded-2xl shadow-lg cursor-pointer transition-all duration-200 active:scale-[0.98]">
             
             <div class="flex items-start justify-between gap-2">
               <div>
                 <h2 class="text-lg md:text-xl font-black text-white leading-snug flex items-center gap-1.5">
                   <span>${icon}</span>
-                  <span>${spotName}</span>
+                  <span>${cleanSpotName}</span>
                 </h2>
                 ${subTitle ? `<p class="text-sm text-slate-300 mt-1 font-medium">${subTitle}</p>` : ''}
               </div>
             </div>
 
+            <!-- Bento Grid 聚焦於預估消費與料理屬性 (v3.1) -->
             <div class="grid grid-cols-2 gap-2 mt-3 pt-3 border-t border-slate-800/80">
               <div class="flex items-center gap-2 bg-slate-800/60 p-2.5 rounded-xl border border-slate-700/50">
                 <span class="text-lg">💰</span>
                 <div>
                   <span class="text-xs text-slate-400 block font-bold">預估消費</span>
-                  <span class="text-emerald-400 font-black text-sm block" style="font-variant-numeric: tabular-nums;">${dbItem.AvgCost ? `¥${dbItem.AvgCost}` : '依現場'}</span>
+                  <span class="text-emerald-400 font-black text-sm block" style="font-variant-numeric: tabular-nums;">${avgCostDisplay}</span>
                 </div>
               </div>
 
               <div class="flex items-center gap-2 bg-slate-800/60 p-2.5 rounded-xl border border-slate-700/50">
-                <span class="text-lg">⭐</span>
+                <span class="text-lg">🏷️</span>
                 <div>
-                  <span class="text-xs text-slate-400 block font-bold">評價 / 類別</span>
-                  <span class="text-amber-400 font-black text-sm block">${dbItem.Tabelog評分 || dbItem.Tabelog || dbItem.Type || '精選景點'}</span>
+                  <span class="text-xs text-slate-400 block font-bold">屬性 / 類型</span>
+                  <span class="text-amber-400 font-black text-sm block">${spotRestType}</span>
                 </div>
               </div>
             </div>
@@ -343,10 +352,7 @@ export function renderNextStepModule(itemName, currentDayKey) {
   const timeline = currentData.schedule.timeline || {};
   let dayItems = [];
 
-  if (Array.isArray(timeline)) {
-    const foundDay = timeline.find(slot => slot.items && slot.items[currentDayKey]);
-    if (foundDay) dayItems = foundDay.items[currentDayKey] || [];
-  } else if (timeline && typeof timeline === 'object') {
+  if (timeline && timeline[currentDayKey]) {
     const dayContent = timeline[currentDayKey];
     if (Array.isArray(dayContent)) {
       dayItems = dayContent;
@@ -419,25 +425,26 @@ export function renderNextStepModule(itemName, currentDayKey) {
    第二層：景點/餐廳 Modal 彈窗
 ---------------------------------------------------- */
 export function openDetailModal(itemName, slotTime = '', isBackNavigation = false) {
-  if (!isBackNavigation && currentModalItem && currentModalItem !== itemName) {
+  const cleanName = getCleanSpotName(itemName);
+  if (!isBackNavigation && currentModalItem && currentModalItem !== cleanName) {
     modalHistory.push({ name: currentModalItem, slotTime });
   }
-  setCurrentModalItem(itemName);
+  setCurrentModalItem(cleanName);
 
-  const dbItem = (currentData.restaurants && currentData.restaurants[itemName]) || 
-                 (currentData.attractions && currentData.attractions[itemName]) || {};
+  const dbItem = (currentData.restaurants && currentData.restaurants[cleanName]) || 
+                 (currentData.attractions && currentData.attractions[cleanName]) || {};
 
-  const titles = parseTitles(itemName, dbItem);
-  const icon = getItemIcon(dbItem.Type || dbItem['Rest.Type'], itemName);
+  const titles = parseTitles(cleanName, dbItem);
+  const icon = getItemIcon(dbItem.Type || dbItem['Rest.Type'], cleanName);
 
   const currentDateStr = currentData.schedule.days[selectedDayIndex];
   const dateObj = new Date(currentDateStr);
   const weekKey = WEEK_KEYS[dateObj.getDay()];
-  const todayHours = dbItem[weekKey] || dbItem.Hours || '請參考官方說明';
+  const todayHours = dbItem[weekKey] || dbItem.Hours_summary || dbItem.Hours || '請參考官方說明';
 
   const itemType = (dbItem.Type || dbItem['Rest.Type'] || '').toLowerCase();
-  const isRestaurant = itemType.includes('餐廳') || itemType.includes('燒肉') || itemType.includes('壽司') || itemType.includes('拉麵') || dbItem.Tabelog評分 || dbItem.Tabelog;
-  const isHotel = itemType.includes('hotel') || itemType.includes('飯店') || itemType.includes('住宿') || itemName.includes('HOTEL') || itemName.includes('飯店');
+  const isRestaurant = itemType.includes('餐廳') || itemType.includes('燒肉') || itemType.includes('壽司') || itemType.includes('拉麵') || dbItem.Rating;
+  const isHotel = itemType.includes('hotel') || itemType.includes('飯店') || itemType.includes('住宿') || cleanName.includes('HOTEL') || cleanName.includes('飯店');
 
   const durationMins = parseDurationMins(dbItem.Duration);
   const departureTime = calcDepartureTime(slotTime, durationMins);
@@ -501,10 +508,11 @@ export function openDetailModal(itemName, slotTime = '', isBackNavigation = fals
       </div>
       <div class="bg-slate-800/80 p-3.5 rounded-xl border border-slate-700 col-span-2">
         <p class="text-xs text-slate-400 font-bold">📌 預訂 / 入住狀態</p>
-        <p class="text-base font-black text-emerald-400 mt-0.5">${dbItem.reservation || dbItem.BookingStatus || '已確認訂房'}</p>
+        <p class="text-base font-black text-emerald-400 mt-0.5">${dbItem.Res_Mode || dbItem.reservation || dbItem.BookingStatus || '已確認訂房'}</p>
       </div>
     `;
   } else if (isRestaurant) {
+    const ratingInfo = parseRatingInfo(dbItem);
     gridHTML += `
       <div class="bg-slate-800/80 p-3.5 rounded-xl border border-slate-700">
         <p class="text-xs text-slate-400 font-bold">🕒 今日營業時間 (${weekKey})</p>
@@ -512,15 +520,15 @@ export function openDetailModal(itemName, slotTime = '', isBackNavigation = fals
       </div>
       <div class="bg-slate-800/80 p-3.5 rounded-xl border border-slate-700">
         <p class="text-xs text-slate-400 font-bold">🍳 料理類型</p>
-        <p class="text-base font-black text-white mt-0.5">${dbItem['Rest.Type'] || dbItem.Type || '美食'}</p>
+        <p class="text-base font-black text-white mt-0.5">${getSpotRestType(dbItem)}</p>
       </div>
       <div class="bg-slate-800/80 p-3.5 rounded-xl border border-slate-700">
         <p class="text-xs text-slate-400 font-bold">💰 平均消費</p>
-        <p class="text-base font-black text-emerald-400 mt-0.5" style="font-variant-numeric: tabular-nums;">${dbItem.AvgCost ? `¥${dbItem.AvgCost}` : '依現場為準'}</p>
+        <p class="text-base font-black text-emerald-400 mt-0.5" style="font-variant-numeric: tabular-nums;">${parseAvgCost(dbItem)}</p>
       </div>
       <div class="bg-slate-800/80 p-3.5 rounded-xl border border-slate-700 col-span-2">
-        <p class="text-xs text-slate-400 font-bold">⭐ Tabelog 評分</p>
-        <p class="text-base font-black text-amber-400 mt-0.5" style="font-variant-numeric: tabular-nums;">${dbItem.Tabelog評分 || dbItem.Tabelog || '高評價推薦'}</p>
+        <p class="text-xs text-slate-400 font-bold">⭐ 評分資訊</p>
+        <p class="text-base font-black text-amber-400 mt-0.5" style="font-variant-numeric: tabular-nums;">${ratingInfo.rating ? `評分: ${ratingInfo.rating}` : '高評價推薦'} ${ratingInfo.count ? `(評論數: ${ratingInfo.count})` : ''}</p>
       </div>
     `;
   } else {
@@ -535,7 +543,7 @@ export function openDetailModal(itemName, slotTime = '', isBackNavigation = fals
       </div>
       <div class="bg-slate-800/80 p-3.5 rounded-xl border border-slate-700 col-span-2">
         <p class="text-xs text-slate-400 font-bold">💰 預估費用</p>
-        <p class="text-base font-black text-emerald-400 mt-0.5" style="font-variant-numeric: tabular-nums;">${dbItem.AvgCost ? `¥${dbItem.AvgCost}` : '免費 / 依現場'}</p>
+        <p class="text-base font-black text-emerald-400 mt-0.5" style="font-variant-numeric: tabular-nums;">${parseAvgCost(dbItem)}</p>
       </div>
     `;
   }
@@ -543,11 +551,11 @@ export function openDetailModal(itemName, slotTime = '', isBackNavigation = fals
   const modalGridEl = document.getElementById('modal-grid');
   if (modalGridEl) modalGridEl.innerHTML = gridHTML;
 
-  const criticalTime = dbItem['Book/Que_CriticalTime'] || dbItem.CriticalTime;
-  const queueLevel = dbItem.Level_of_Que || dbItem.reservation;
-  const planB = dbItem.Plan_B || dbItem.PlanB;
-  const comment = dbItem.Comment || dbItem.Notes;
-  const storyText = dbItem.Story || dbItem.Description;
+  const criticalTime = dbItem.CriticalTime;
+  const queueLevel = dbItem.Queue_Level || dbItem.Level_of_Que;
+  const planB = dbItem.Plan_B;
+  const comment = dbItem.Comment;
+  const storyText = dbItem.Story;
   const subSpots = parseSubSpots(dbItem.SubSpots);
 
   let alertHTML = '';
@@ -556,7 +564,7 @@ export function openDetailModal(itemName, slotTime = '', isBackNavigation = fals
     alertHTML += `
       <div class="bg-amber-500/10 border-l-4 border-amber-500 p-3.5 rounded-r-xl">
         <p class="text-xs font-bold text-amber-400 uppercase tracking-wider">⚠️ 關鍵時間與提醒</p>
-        <p class="text-sm font-black text-amber-200 mt-1 whitespace-pre-line leading-relaxed">${criticalTime || ''} ${queueLevel ? `\n(${queueLevel})` : ''}</p>
+        <p class="text-sm font-black text-amber-200 mt-1 whitespace-pre-line leading-relaxed">${criticalTime || ''} ${queueLevel ? `\n(排隊狀況: ${queueLevel})` : ''}</p>
       </div>
     `;
   }
@@ -578,20 +586,20 @@ export function openDetailModal(itemName, slotTime = '', isBackNavigation = fals
                           (currentData.attractions && currentData.attractions[spot.name]) || {};
             
             const hasDbData = Object.keys(subDb).length > 0;
-            const subMapUrl = subDb.Gmap_URL || subDb.GmapURL || subDb.MapURL || subDb.Website || `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(spot.name)}`;
-            const subImgUrl = subDb.ImageURL || subDb.ImgURL || subDb.ImgUrl || subDb.imageUrl || subDb.imgUrl || subDb.Photo || subDb.Pic || subDb.Picture;
-            const isChecked = localStorage.getItem(getSubspotCheckKey(itemName, spot.name)) === 'true';
+            const subMapUrl = subDb.Gmap_URL || `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(spot.name)}`;
+            const subImgUrl = subDb.ImageURL;
+            const isChecked = localStorage.getItem(getSubspotCheckKey(cleanName, spot.name)) === 'true';
 
             return `
               <div class="relative flex items-start justify-between gap-2 bg-slate-900/90 border border-slate-800 p-3 rounded-xl hover:border-slate-700 transition">
                 <div class="absolute -left-[21px] top-3.5 w-2.5 h-2.5 rounded-full bg-amber-400 ring-4 ring-slate-950"></div>
 
                 <div class="flex items-start gap-2.5 flex-1">
-                  <input type="checkbox" id="spot-chk-${i}" ${isChecked ? 'checked' : ''} onchange="toggleSubspotCheck('${itemName}', '${spot.name}', this)" class="w-4 h-4 mt-1 accent-amber-400 rounded cursor-pointer flex-shrink-0">
+                  <input type="checkbox" id="spot-chk-${i}" ${isChecked ? 'checked' : ''} onchange="toggleSubspotCheck('${cleanName}', '${spot.name}', this)" class="w-4 h-4 mt-1 accent-amber-400 rounded cursor-pointer flex-shrink-0">
                   <div>
                     <div class="flex items-center gap-2 flex-wrap">
                       ${spot.time ? `<span class="text-xs font-black text-amber-300 bg-amber-500/20 px-2 py-0.5 rounded-md border border-amber-500/30" style="font-variant-numeric: tabular-nums;">${spot.time}</span>` : ''}
-                      <label id="subspot-label-${itemName}-${spot.name}" for="spot-chk-${i}" class="text-sm font-black cursor-pointer leading-snug ${isChecked ? 'line-through text-slate-500' : 'text-slate-100'}">
+                      <label id="subspot-label-${cleanName}-${spot.name}" for="spot-chk-${i}" class="text-sm font-black cursor-pointer leading-snug ${isChecked ? 'line-through text-slate-500' : 'text-slate-100'}">
                         ${spot.name}
                       </label>
                     </div>
@@ -647,12 +655,12 @@ export function openDetailModal(itemName, slotTime = '', isBackNavigation = fals
     `;
   }
 
-  const nextStepHTML = renderNextStepModule(itemName, currentDateStr);
+  const nextStepHTML = renderNextStepModule(cleanName, currentDateStr);
   const modalAlertsEl = document.getElementById('modal-alerts');
   if (modalAlertsEl) modalAlertsEl.innerHTML = alertHTML + nextStepHTML;
 
-  const mapUrl = dbItem.Gmap_URL || dbItem.GmapURL || dbItem.MapURL || dbItem.Website || buildContinuousMapUrl(itemName, subSpots);
-  const menuUrl = dbItem.Menu || dbItem.MenuImgURL;
+  const mapUrl = dbItem.Gmap_URL || buildContinuousMapUrl(cleanName, subSpots);
+  const menuUrl = dbItem.Menu_URL;
 
   const actionsEl = document.getElementById('modal-actions');
   if (actionsEl) {
@@ -722,12 +730,12 @@ export function openTransportModal(fullRoute) {
       const timetableRaw = info.Timetable || info['特定班次'] || info.TimeTable || '';
       const parsedTimetables = parseTimetableList(timetableRaw);
 
-      const liveUrl = info.LiveUrl || info.Link2 || info['實時位置連結'] || info.Options;
-      const routeTips = info.RouteTips || info.RouteGuide || info.WalkingTips || info['路線提示'];
-      const videoUrl = info.VideoURL || info.Video || info.video_url;
+      const liveUrl = info.LiveUrl || info.Link2 || info['實時位置連結'];
+      const routeTips = info.RouteTips || info['路線提示'];
+      const videoUrl = info.VideoURL || info.Video;
 
-      const timetablePic = info.timeTable_pic_url || info.TimeTable_Pic_URL || info.timeTable_pic || info.TimeTable_Pic;
-      const timetableLink = info.TimeTable || info.TimeTableURL || info.timetable_url;
+      const timetablePic = info.timeTable_pic_url || info.TimeTable_Pic_URL;
+      const timetableLink = info.TimeTable;
 
       let feeBadge = '';
       if (info.Fee !== undefined && info.Fee !== null && String(info.Fee).trim() !== '') {
@@ -742,7 +750,7 @@ export function openTransportModal(fullRoute) {
       }
 
       const defaultSegNav = `https://www.google.com/maps/dir/?api=1&origin=${encodeURIComponent(seg.from)}&destination=${encodeURIComponent(seg.to)}`;
-      const segNavUrl = info.Shortcut || info.ShortcutURL || info.Gmap_URL || defaultSegNav;
+      const segNavUrl = info.Shortcut || defaultSegNav;
 
       return `
         <div class="space-y-3">
@@ -759,15 +767,15 @@ export function openTransportModal(fullRoute) {
               ${seg.from} <span class="text-amber-400">➔</span> ${seg.to}
             </div>
 
-            ${info.Platform || info.DeparturePlatform ? `
+            ${info.Platform ? `
               <div class="text-sm text-amber-200 bg-amber-950/40 border border-amber-800/60 p-2.5 rounded-lg font-bold">
-                🏣 乘車處/月台：${info.Platform || info.DeparturePlatform}
+                🏣 乘車處/月台：${info.Platform}
               </div>
             ` : ''}
 
-            ${info.Line || info.RouteName ? `
+            ${info.Line ? `
               <div class="text-sm text-slate-200 font-bold">
-                🚇 搭乘路線：<span class="text-white">${info.Line || info.RouteName}</span>
+                🚇 搭乘路線：<span class="text-white">${info.Line}</span>
               </div>
             ` : ''}
 
@@ -786,10 +794,10 @@ export function openTransportModal(fullRoute) {
               </div>
             ` : ''}
 
-            ${(info.Remarks || info.Notes) ? `
+            ${(info.Remarks) ? `
               <div class="bg-rose-950/40 border-l-4 border-rose-500 p-3.5 rounded-r-xl">
                 <p class="text-xs font-bold text-rose-400 uppercase tracking-wider mb-0.5">⚠️ 乘車與票券注意事項</p>
-                <p class="text-sm font-bold text-rose-200 leading-relaxed whitespace-pre-line">${info.Remarks || info.Notes}</p>
+                <p class="text-sm font-bold text-rose-200 leading-relaxed whitespace-pre-line">${info.Remarks}</p>
               </div>
             ` : ''}
 
@@ -821,14 +829,6 @@ export function openTransportModal(fullRoute) {
                 <a href="${videoUrl}" target="_blank" rel="noopener noreferrer" class="w-full py-2.5 bg-sky-950/90 hover:bg-sky-900 border border-sky-700 text-sky-200 text-sm font-black rounded-xl flex items-center justify-center gap-2 transition active:scale-95 shadow">
                   <span>🎬</span>
                   <span>觀看實景走法影片 (YouTube)</span>
-                </a>
-              </div>
-            ` : ''}
-
-            ${liveUrl ? `
-              <div class="pt-1">
-                <a href="${liveUrl}" target="_blank" class="inline-flex items-center gap-1 text-sm text-sky-400 hover:text-sky-300 font-bold underline">
-                  🔗 查看實時交通位置 / 相關連結
                 </a>
               </div>
             ` : ''}
@@ -963,15 +963,13 @@ function findTransportInfo(fullRoute, routeParts) {
   return {};
 }
 
-function parseTitles(rawName, dbItem) {
-  let main = rawName;
-  let sub = dbItem.Name || '';
+function parseTitles(cleanName, dbItem) {
+  let main = cleanName;
+  let sub = dbItem.Name || dbItem.Local_Name || '';
 
-  if (rawName.includes('(') || rawName.includes('（')) {
-    main = rawName;
-  } else if (dbItem.RestType || dbItem['Rest.Type']) {
-    const type = dbItem.RestType || dbItem['Rest.Type'];
-    if (type && !rawName.includes(type)) sub = `${type} · ${sub}`;
+  if (dbItem.Rest_Type || dbItem['Rest.Type']) {
+    const type = dbItem.Rest_Type || dbItem['Rest.Type'];
+    if (type && !cleanName.includes(type)) sub = `${type} · ${sub}`;
   }
 
   if (main === sub) sub = '';
@@ -985,9 +983,9 @@ function getItemIcon(type, name) {
     return '📍';
   }
   if (type.includes('Hotel') || type.includes('飯店') || type.includes('住宿')) return '🏨';
-  if (type.includes('餐廳') || type.includes('燒肉') || type.includes('壽司')) return '🍴';
+  if (type.includes('餐廳') || type.includes('燒肉') || type.includes('壽司') || type.includes('美食')) return '🍴';
   if (type.includes('面包') || type.includes('甜點') || type.includes('咖啡')) return '☕';
-  if (type.includes('Spot') || type.includes('景點') || type.includes('神社') || type.includes('商店街')) return '⛩️';
+  if (type.includes('Spot') || type.includes('觀光') || type.includes('景點') || type.includes('神社') || type.includes('商店街') || type.includes('公園')) return '⛩️';
   if (type.includes('Mall') || type.includes('購物') || type.includes('outlet')) return '🛍';
   return '📍';
 }
@@ -997,29 +995,9 @@ function getReservationBadge(status) {
   if (status.includes('排隊') || status.includes('現場')) {
     return `<span class="bg-rose-950/80 border border-rose-800 text-rose-300 text-sm font-bold px-2.5 py-1 rounded-lg">🔴 現場排隊</span>`;
   }
-  if (status.includes('預約') || status.includes('不用排')) {
-    return `<span class="bg-emerald-950/80 border border-emerald-800 text-emerald-300 text-sm font-bold px-2.5 py-1 rounded-lg">🟢 已預約/不用排</span>`;
+  if (status.includes('預約') || status.includes('不用排') || status.includes('可預約')) {
+    return `<span class="bg-emerald-950/80 border border-emerald-800 text-emerald-300 text-sm font-bold px-2.5 py-1 rounded-lg">🟢 ${status}</span>`;
   }
   return `<span class="bg-amber-950/80 border border-amber-800 text-amber-300 text-sm font-bold px-2.5 py-1 rounded-lg">🟡 ${status}</span>`;
 }
 
-
-/* ----------------------------------------------------
-   --- 以下為未調用的舊有/備用函式 (Legacy / Unused Helpers) ---
----------------------------------------------------- */
-
-/**
- * 舊版離開時間計算函式（目前由 GAS 後端統一提供 slot.departure，故前端未直接調用）
- */
-function calcDepartureTime(slotTime, durationMins) {
-  if (!slotTime || !durationMins) return '';
-  const cleanTime = slotTime.split(/→|➔/)[0].trim();
-  const [hours, mins] = cleanTime.split(':').map(Number);
-  if (isNaN(hours) || isNaN(mins)) return '';
-  
-  const totalMins = hours * 60 + mins + Number(durationMins);
-  const depHours = Math.floor(totalMins / 60) % 24;
-  const depMins = totalMins % 60;
-  
-  return `${String(depHours).padStart(2, '0')}:${String(depMins).padStart(2, '0')}`;
-}
