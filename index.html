@@ -158,6 +158,27 @@
       border-color: #FBBF24 !important;
       color: #92400E !important;            /* 深琥珀/焦糖色字體 */
     }
+
+    /* =================================================   
+       Light Mode 頂部右側膠囊按鈕配色優化 
+       ================================================ */
+    body.light-mode header button#theme-toggle-btn {
+      background-color: #E2E8F0 !important; /* 柔和淺灰藍底 (Slate-200) */
+      border-color: #CBD5E1 !important;     /* 邊框色 */
+      color: #92400E !important;            /* 溫潤的焦糖色字體 */
+    }
+
+    body.light-mode header button[onclick="fetchLatestData()"],
+    body.light-mode header .bg-brand-surface {
+      background-color: #E2E8F0 !important;
+      border-color: #CBD5E1 !important;
+    }
+
+    /* 針對 Mock 模式或其他狀態膠囊在 Light mode 下的文字對比強化 */
+    body.light-mode header span#sync-text {
+      color: #334155 !important;            /* 深灰次要文字確保清晰 */
+      font-weight: 700 !important;
+    }
   </style>
 </head>
 <body class="dark min-h-screen pb-24 select-none antialiased">
