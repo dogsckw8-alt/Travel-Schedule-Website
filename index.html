@@ -39,14 +39,14 @@
 
     /* 戶外強光高對比日間模式 (Light Mode) */
     body.light-mode {
-      --bg-main: #F8FAFC;
+      --bg-main: #F1F5F9;
       --card-bg: #FFFFFF;
-      --card-border: #CBD5E1;
-      --text-primary: #0F172A;
-      --text-muted: #475569;
-      --inner-box-bg: #F1F5F9;
+      --card-border: #94A3B8;
+      --text-primary: #020617;
+      --text-muted: #334155;
+      --inner-box-bg: #E2E8F0;
     }
-
+      
     body {
       font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
       -webkit-tap-highlight-color: transparent;
@@ -64,13 +64,24 @@
       touch-action: pan-y; /* 鎖定縱向捲動，允許橫向 Pointer 手勢 */
     }
 
+    /* 確保 Light 模式下 Bento 內部的文字與標籤強制清晰 */
+    body.light-mode .touch-card {
+      box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05), 0 2px 4px -1px rgba(0, 0, 0, 0.03);
+    }
+    
     /* Bento Grid 內部小方格適配 */
     body.light-mode .bg-slate-800\/60,
     body.light-mode .bg-slate-900 {
       background-color: var(--inner-box-bg) !important;
       border-color: var(--card-border) !important;
     }
-
+    /* Light Mode 下的細節文字優化 */
+    body.light-mode .text-slate-400 {
+      color: #475569 !important; /* 將原本偏暗的灰色改為 Slate-600 */
+    }
+    body.light-mode .text-slate-300 {
+      color: #1E293B !important; /* 將次要白字改為深色 Slate-800 */
+    }
     /* 確保 Light 模式下 Modal 與 Header 背景正確 */
     body.light-mode header,
     body.light-mode nav {
