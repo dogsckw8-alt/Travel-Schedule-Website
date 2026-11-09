@@ -61,6 +61,9 @@ export function renderApp() {
 /* ----------------------------------------------------
    第一層：時間軸卡片渲染 (Apple 雙軌優先級 Focus & Bento Grid)
 ---------------------------------------------------- */
+/* ----------------------------------------------------
+   第一層：時間軸卡片渲染 (Apple 雙軌優先級 Focus & Bento Grid)
+---------------------------------------------------- */
 export function renderTimeline(currentDayKey) {
   console.log('正在渲染 Day:', currentDayKey);
   const container = document.getElementById('timeline-container');
@@ -118,12 +121,9 @@ export function renderTimeline(currentDayKey) {
   const currentMins = now.getHours() * 60 + now.getMinutes();
   let activeFocusIndex = -1;
 
-  // 軌道一：尋找「正在進行中 (Ongoing)」的項目 (start_time <= current <= departure/end)
   for (let i = 0; i < dayItems.length; i++) {
     const slot = dayItems[i];
     const rawName = slot.name || '';
-    const isTransport = rawName.includes('→') || rawName.includes('➔');
-    
     const startTimeStr = slot.time ? slot.time.split(/→|➔/)[0].trim() : '00:00';
     const startMins = timeToMins(startTimeStr);
     
@@ -133,7 +133,7 @@ export function renderTimeline(currentDayKey) {
     } else if (slot.duration) {
       endMins = startMins + Number(slot.duration);
     } else {
-      endMins = startMins + 30; // 預設 30 分鐘跨距
+      endMins = startMins + 30;
     }
 
     if (currentMins >= startMins && currentMins <= endMins) {
@@ -142,7 +142,6 @@ export function renderTimeline(currentDayKey) {
     }
   }
 
-  // 軌道二：若無進行中項目，尋找「即將到來 (Next Up)」的第一個未來項目
   if (activeFocusIndex === -1) {
     for (let i = 0; i < dayItems.length; i++) {
       const slot = dayItems[i];
@@ -155,7 +154,6 @@ export function renderTimeline(currentDayKey) {
     }
   }
 
-  // 預設收尾：若當天行程皆已過，高亮最後一項
   if (activeFocusIndex === -1 && dayItems.length > 0) {
     activeFocusIndex = dayItems.length - 1;
   }
@@ -195,14 +193,12 @@ export function renderTimeline(currentDayKey) {
         ? `<span class="bg-rose-950/90 text-rose-300 border border-rose-600 px-3 py-1 rounded-lg text-sm font-black flex items-center gap-1 shadow-sm" style="font-variant-numeric: tabular-nums;">🎯 目標班次 ${targetTime}</span>`
         : '';
 
-      // 💡 解決 Hover 與 Focus 樣式衝突：為高亮狀態與一般狀態配置獨立的平滑互動類別
       const transportCardClasses = isFocus
         ? 'bg-slate-900 border-amber-400 ring-2 ring-amber-400/40 shadow-lg shadow-amber-400/10 hover:border-amber-300 hover:ring-amber-300/60'
         : 'bg-slate-900 border-amber-500/40 hover:border-amber-400';
 
       return `
         <div class="flex items-start gap-3 relative z-10 my-2">
-          <!-- 🔒 精準對齊鎖定區塊：絕無毫米偏移 -->
           <div class="w-14 pt-1 flex flex-col items-center flex-shrink-0 relative">
             <span class="text-lg font-black text-amber-400 bg-slate-900 px-1 py-0.5 rounded border border-amber-500/30 w-full text-center" style="font-variant-numeric: tabular-nums;">${transStart}</span>
             <span class="text-xxxl font-bold text-amber-400/90 my-0.5 inline-flex items-center justify-center w-full leading-none -translate-x-[4px]">↓</span>
@@ -233,125 +229,7 @@ export function renderTimeline(currentDayKey) {
       `;
     }
 
-    // ⛩️ 景點/餐廳/飯店卡片渲染 (Bento Grid 結構)
-    const parsedNotice = parseCellContent(slot);
-    const { spotName, subTitle } = parsedNotice;
-
-    const dbItem = (currentData.restaurants && currentData.restaurants[spotName]) || 
-                   (currentData.attractions && currentData.attractions[spotName]) || {};
-
-    const displayTime = parsedNotice.queueTime || slot.time;
-    const statusBadge = getCardStatusBadge({ slotTime: slot.time, dbItem, parsedNotice, weekKey });
-
-    const nextSlot = dayItems[idx + 1];
-    const nextRawName = nextSlot ? nextSlot.name : null;
-    const nextIsTransport = nextRawName ? (nextRawName.includes('→') || nextRawName.includes('➔')) : false;
-    const isShortWalkToNext = nextSlot && !nextIsTransport;
-
-    let shortWalkHTML = '';
-    if (isShortWalkToNext) {
-      const nextClean = getCleanSpotName(nextRawName);
-      const matchedTrans = getBetweenSpotsTransport(currentData, spotName, nextClean);
-
-      if (matchedTrans) {
-        const durationStr = formatMins(matchedTrans.Time || matchedTrans.Duration);
-        const lineInfo = matchedTrans.Line ? ` (${matchedTrans.Line})` : '';
-
-        shortWalkHTML = `
-          <div onclick="openTransportModal('${spotName}➔${nextClean}')" class="flex items-center justify-between bg-slate-900/80 border border-slate-800 hover:border-amber-500/40 px-3.5 py-2.5 rounded-xl cursor-pointer transition my-1.5">
-            <div class="flex items-center gap-2 text-slate-200 font-bold text-sm">
-              <span class="text-amber-400 text-base">🚶</span>
-              <span>移動至 <strong class="text-amber-300 font-extrabold text-sm">${nextClean}</strong>${lineInfo}</span>
-            </div>
-            <div class="flex items-center gap-2 font-bold flex-shrink-0">
-              <span class="bg-amber-500/20 text-amber-300 px-2.5 py-1 rounded-lg text-sm" style="font-variant-numeric: tabular-nums;">⏱️ 約 ${durationStr}</span>
-            </div>
-          </div>
-        `;
-      } else {
-        shortWalkHTML = `
-          <div class="flex items-center gap-2 pl-2 text-sm font-bold text-slate-400 py-1">
-            <span class="w-2 h-2 rounded-full bg-slate-600 animate-ping"></span>
-            <span>🚶 短程移動 / 徒步前往下一站（約 3 - 8 分鐘）</span>
-          </div>
-        `;
-      }
-    }
-
-    const icon = getItemIcon(dbItem.Type || dbItem['Rest.Type'], spotName);
-    const reservationBadge = getReservationBadge(dbItem.reservation || dbItem.BookingStatus);
-    const subSpotsList = parseSubSpots(dbItem.SubSpots);
-    
-    const durationMins = slot.duration || parseDurationMins(dbItem.Duration);
-    // 優先採用後端帶出的 departure 欄位
-    const departureTime = slot.departure || '';
-
-    // 💡 解決 Hover 與 Focus 樣式衝突：為景點卡片配置獨立平滑類別
-    const spotCardClasses = isFocus
-      ? 'bg-slate-900 border-amber-400 ring-2 ring-amber-400/40 shadow-lg shadow-amber-400/10 hover:border-amber-300 hover:ring-amber-300/60'
-      : 'bg-slate-900 border-slate-800 hover:border-slate-700';
-
-    return `
-      <div class="flex items-start gap-3 relative z-10 my-2">
-        <!-- 左側時間顯示區 -->
-        <div class="w-12 pt-2 flex-shrink-0 text-right">
-          <span class="text-lg font-extrabold ${parsedNotice.queueTime ? 'text-amber-300 underline underline-offset-2' : 'text-amber-400'} block" style="font-variant-numeric: tabular-nums;">
-            ${displayTime}
-          </span>
-        </div>
-
-        <div class="flex-1 space-y-3">
-          <!-- Bento Grid 卡片主體 -->
-          <div onclick="openDetailModal('${spotName}', '${displayTime}')" class="touch-card ${spotCardClasses} p-4 rounded-2xl shadow-lg cursor-pointer transition-all duration-200 active:scale-[0.98]">
-            
-            <!-- 大標焦點 -->
-            <div class="flex items-start justify-between gap-2">
-              <div>
-                <h2 class="text-lg md:text-xl font-black text-white leading-snug flex items-center gap-1.5">
-                  <span>${icon}</span>
-                  <span>${spotName}</span>
-                </h2>
-                ${subTitle ? `<p class="text-sm text-slate-300 mt-1 font-medium">${subTitle}</p>` : ''}
-              </div>
-            </div>
-
-            <!-- 2x2 Bento Grid 區塊：左側 Icon + 說明，右側放大數值 -->
-            <div class="grid grid-cols-2 gap-2 mt-3 pt-3 border-t border-slate-800/80">
-              <div class="flex items-center gap-2 bg-slate-800/60 p-2.5 rounded-xl border border-slate-700/50">
-                <span class="text-lg">📍</span>
-                <div class="overflow-hidden">
-                  <span class="text-xs text-slate-400 block font-bold">地區</span>
-                  <span class="text-slate-100 font-black text-sm truncate block">${dbItem.District || '東京'}</span>
-                </div>
-              </div>
-
-              <div class="flex items-center gap-2 bg-slate-800/60 p-2.5 rounded-xl border border-slate-700/50">
-                <span class="text-lg">⏱️</span>
-                <div>
-                  <span class="text-xs text-slate-400 block font-bold">停留時間</span>
-                  <span class="text-amber-300 font-black text-sm block" style="font-variant-numeric: tabular-nums;">${durationMins} 分 ${departureTime ? `(${departureTime})` : ''}</span>
-                </div>
-              </div>
-
-              <div class="flex items-center gap-2 bg-slate-800/60 p-2.5 rounded-xl border border-slate-700/50">
-                <span class="text-lg">💰</span>
-                <div>
-                  <span class="text-xs text-slate-400 block font-bold">預估消費</span>
-                  <span class="text-emerald-400 font-black text-sm block" style="font-variant-numeric: tabular-nums;">${dbItem.AvgCost ? `¥${dbItem.AvgCost}` : '依現場'}</span>
-                </div>
-              </div>
-
-              <div class="flex items-center gap-2 bg-slate-800/60 p-2.5 rounded-xl border border-slate-700/50">
-                <span class="text-lg">⭐</span>
-                <div>
-                  <span class="text-xs text-slate-400 block font-bold">評價 / 類別</span>
-                  <span class="text-amber-400 font-black text-sm block">${dbItem.Tabelog評分 || dbItem.Tabelog || dbItem.Type || '精選景點'}</span>
-                </div>
-              </div>
-            </div>
-
-    
-    // ⛩️ 景點/餐廳/飯店卡片渲染 (雙時間點與簡化 Bento Grid 結構)
+    // ⛩️ 景點/餐廳/飯店卡片渲染 (雙時間點與 Bento Grid 結構)
     const parsedNotice = parseCellContent(slot);
     const { spotName, subTitle } = parsedNotice;
 
@@ -403,14 +281,12 @@ export function renderTimeline(currentDayKey) {
     const durationMins = slot.duration || parseDurationMins(dbItem.Duration);
     const departureTime = slot.departure || calcDepartureTime(slot.time, durationMins);
 
-    // 💡 解決 Hover 與 Focus 樣式衝突：為景點卡片配置獨立平滑類別
     const spotCardClasses = isFocus
       ? 'bg-slate-900 border-amber-400 ring-2 ring-amber-400/40 shadow-lg shadow-amber-400/10 hover:border-amber-300 hover:ring-amber-300/60'
       : 'bg-slate-900 border-slate-800 hover:border-slate-700';
 
     return `
       <div class="flex items-start gap-3 relative z-10 my-2">
-        <!-- 🔒 與交通卡片完全一致的雙時間點對齊結構 (Arrival & Departure) -->
         <div class="w-14 pt-1 flex flex-col items-center flex-shrink-0 relative">
           <span class="text-lg font-black text-amber-400 bg-slate-900 px-1 py-0.5 rounded border border-amber-500/30 w-full text-center" style="font-variant-numeric: tabular-nums;">${displayTime}</span>
           <span class="text-xxxl font-bold text-amber-400/90 my-0.5 inline-flex items-center justify-center w-full leading-none -translate-x-[4px]">↓</span>
@@ -418,10 +294,8 @@ export function renderTimeline(currentDayKey) {
         </div>
 
         <div class="flex-1 space-y-3">
-          <!-- 簡化後的 Bento Grid 卡片主體 (移除地區與停留時間方格，改留消費與評分) -->
           <div onclick="openDetailModal('${spotName}', '${displayTime}')" class="touch-card ${spotCardClasses} p-4 rounded-2xl shadow-lg cursor-pointer transition-all duration-200 active:scale-[0.98]">
             
-            <!-- 大標焦點 -->
             <div class="flex items-start justify-between gap-2">
               <div>
                 <h2 class="text-lg md:text-xl font-black text-white leading-snug flex items-center gap-1.5">
@@ -432,7 +306,6 @@ export function renderTimeline(currentDayKey) {
               </div>
             </div>
 
-            <!-- 簡化為 2 格（預估消費與評價/類別），並將停留時間移至卡片摘要列 -->
             <div class="grid grid-cols-2 gap-2 mt-3 pt-3 border-t border-slate-800/80">
               <div class="flex items-center gap-2 bg-slate-800/60 p-2.5 rounded-xl border border-slate-700/50">
                 <span class="text-lg">💰</span>
@@ -450,7 +323,7 @@ export function renderTimeline(currentDayKey) {
                 </div>
               </div>
             </div>
-            <!-- 狀態標籤欄位 -->
+
             <div class="flex flex-wrap items-center gap-2 mt-2.5 pt-2 border-t border-slate-800/60">
               ${statusBadge}
               ${reservationBadge}
@@ -742,6 +615,7 @@ export function openDetailModal(itemName, slotTime = '', isBackNavigation = fals
               </div>
             `;
           }).join('')}
+
         </div>
       </div>
     `;
