@@ -94,6 +94,27 @@
       border-color: #CBD5E1 !important;
       color: #0F172A !important;
     }
+    
+    /* Light Mode 重要資訊對比強化 */
+    body.light-mode h2,
+    body.light-mode h3,
+    body.light-mode .touch-card h2,
+    body.light-mode .touch-card h3 {
+      color: #020617 !important; /* 卡片 Heading 轉為極深近黑色，絕對清晰 */
+    }
+
+    /* Timeline 時間標籤（左側時間）在 Light mode 下改為近黑色並加粗 */
+    body.light-mode #timeline-container span[style*="tabular-nums"] {
+      color: #0F172A !important;
+      font-weight: 900 !important;
+    }
+
+    /* 調整 Light Mode 下的琥珀色/焦糖色文字（加粗 + 高對比焦糖色） */
+    body.light-mode .text-amber-400,
+    body.light-mode .text-amber-300 {
+      color: #B45309 !important; /* 深焦糖色 (Amber-700)，在白底上有極佳辨識度 */
+      font-weight: 800 !important;
+    }
 
     .no-scrollbar::-webkit-scrollbar {
       display: none;
