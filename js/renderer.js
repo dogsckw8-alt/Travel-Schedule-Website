@@ -61,9 +61,6 @@ export function renderApp() {
 /* ----------------------------------------------------
    第一層：時間軸卡片渲染 (Apple 雙軌優先級 Focus & Bento Grid)
 ---------------------------------------------------- */
-/* ----------------------------------------------------
-   第一層：時間軸卡片渲染 (Apple 雙軌優先級 Focus & Bento Grid)
----------------------------------------------------- */
 export function renderTimeline(currentDayKey) {
   console.log('正在渲染 Day:', currentDayKey);
   const container = document.getElementById('timeline-container');
