@@ -1,14 +1,14 @@
 /**
- * --------------------------------------------------------------------
- * 🛠️ 模組 C：完整前端資料解析與運算核心 (parser.js)
- * 嚴格對齊後端 A~AJ 欄位與資料合約（包含所有舊版核心與新版邏輯）
- * --------------------------------------------------------------------
+ * ----------------------------------------------------
+ * 🛠️ 模組 C：完整前端資料解析與運算核心 (parser.js - v3.1 Schema Compatible)
+ * 嚴格對齊後端 A~AJ 欄位與資料合約（支援新舊欄位 Fallback）
+ * ----------------------------------------------------
  */
 
 // 清洗含管線符號的原始名稱 (例: "淺草寺 | 雷門" -> "淺草寺")
 export function getCleanSpotName(rawName) {
   if (!rawName) return '';
-  return rawName.split('|')[0].trim();
+  return String(rawName).split('|')[0].trim();
 }
 
 // 解析停留分鐘數
@@ -23,6 +23,35 @@ export function parseDurationMins(durationVal) {
   }
   const match = str.match(/\d+/);
   return match ? parseInt(match[0], 10) : 60;
+}
+
+// 取得店家/景點的屬性類型 (支援 Rest_Type -> Rest.Type -> Type Fallback)
+export function getSpotRestType(item) {
+  if (!item) return '一般';
+  return item.Rest_Type || (item.Rest && item.Rest.Type) || item.Type || '一般';
+}
+
+// 取得店家/景點的平均消費（相容 "¥44/人"、純數字與 Travel_Avg_Cost）
+export function parseAvgCost(item) {
+  if (!item) return '¥0/人';
+  const rawCost = item.AvgCost || item.Travel_Avg_Cost;
+  if (!rawCost && rawCost !== 0) return '¥0/人';
+  
+  const str = String(rawCost).trim();
+  if (str.includes('/人') || str.includes('¥') || str.includes('$')) {
+    return str;
+  }
+  const numMatch = str.match(/\d+/);
+  if (!numMatch) return '¥0/人';
+  return `¥${numMatch[0]}/人`;
+}
+
+// 取得評分與評論數（相容新版 Rating/Comment_Count 與舊版 Tabelog評分）
+export function parseRatingInfo(item) {
+  if (!item) return { rating: '', count: '' };
+  const rating = item.Rating || item['Tabelog評分'] || '';
+  const count = item.Comment_Count || '';
+  return { rating, count };
 }
 
 // 取得兩點之間的交通資訊（兼容新舊鍵值格式）
@@ -356,23 +385,39 @@ export function getCardStatusBadge({ slotTime, dbItem, parsedNotice, weekKey }) 
 }
 
 /* ----------------------------------------------------
-   🧪 Checkpoint 2 (CP2): TDD 診斷驗證腳本
+   🧪 Checkpoint 2 (CP2): TDD 診斷驗證腳本 (升級版)
 ---------------------------------------------------- */
 export function runParserCheckpoint() {
-  console.group("🧪 [CP2 TDD Diagnostic] Parser & Logic Checkpoint");
+  console.group("🧪 [CP2 TDD Diagnostic] Parser & Schema v3.1 Checkpoint");
   
   // 1. 測試 SubSpots 解析
   const testSubSpotsStr = "09:00 雷門拍紀念照 [拍照熱點] | 09:30 仲見世通商店街吃人形燒 [美食,伴手禮]";
   const parsedSubs = parseSubSpots(testSubSpotsStr);
   console.log("👉 SubSpots 解析結果:", parsedSubs);
 
-  // 2. 測試目標班次提取
+  // 2. 測試新欄位 Fallback (Rest_Type & AvgCost)
+  const testItemNew = { Rest_Type: "美食", AvgCost: "¥44/人", Rating: "4.4", Comment_Count: "140" };
+  const testItemOld = { "Rest.Type": "居酒屋", AvgCost: "3000", "Tabelog評分": "3.45" };
+  
+  console.log("👉 新版 Schema 解析測試:", {
+    typeNew: getSpotRestType(testItemNew),
+    costNew: parseAvgCost(testItemNew),
+    ratingNew: parseRatingInfo(testItemNew)
+  });
+
+  console.log("👉 舊版 Schema Fallback 測試:", {
+    typeOld: getSpotRestType(testItemOld),
+    costOld: parseAvgCost(testItemOld),
+    ratingOld: parseRatingInfo(testItemOld)
+  });
+
+  // 3. 測試目標班次提取
   const testTimetable = "11:45, **11:52**, 12:00";
   const targetClass = extractTargetClass(testTimetable);
   const timetableList = parseTimetableList(testTimetable);
   console.log(`👉 提取目標班次 (${targetClass}):`, timetableList);
 
-  // 3. 測試離開時間計算
+  // 4. 測試離開時間計算
   const depTime = calcDepartureTime("09:00", 120);
   console.log("👉 預計離開時間計算 (09:00 + 120m):", depTime);
 

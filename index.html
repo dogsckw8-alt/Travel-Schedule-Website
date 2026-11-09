@@ -387,111 +387,300 @@
   </script>
 
   <script>
-    /* 🧪 模擬測試資料 (Mock Data for Checkpoint 1 & UI Validation) */
+    /* 🧪 完整高覆蓋率模擬測試資料 (Mock Data for Future-Proof Schema Testing) */
     window.mockTravelData = {
       "status": "success",
       "apiVersion": "3.1",
       "schemaVersion": "2026.10",
-      "updatedAt": "2026/11/9 下午4:47:08",
+      "updatedAt": "2026/11/9 下午 4:47:08",
       "schedule": {
-        "days": ["2026-12-13", "2026-12-14"],
+        "days": [
+          "2026-12-13",
+          "2026-12-14",
+          "2026-12-15",
+          "2026-12-16",
+          "2026-12-17"
+        ],
         "timeline": {
           "2026-12-13": {
-           "fitness": {
-             "totalSteps": 3179,
-             "totalWalkMin": 36,
-             "totalDistM": 2200,
-             "status": "🟢",
-              "summaryText": "🟢 輕鬆漫遊 | 預估步數: 3,179 步 | 總步行: 36 分鐘 (2.2 km)"
-            },
             "items": [
-             {
-               "time": "07:00",
-               "name": "香港➔深圳車公廟",
+              {
+                "time": "07:00",
+                "name": "香港➔深圳車公廟",
                 "duration": 150,
-               "departure": "09:30",
-               "notice": "請提前抵達口岸"
-             }
-           ]
-         },
-         "2026-12-14": {
-           "fitness": {
-             "totalSteps": 5200,
-              "totalWalkMin": 50,
-              "totalDistM": 3500,
-              "status": "🟢",
-              "summaryText": "🟢 舒適行程 | 預估步數: 5,200 步 | 總步行: 50 分鐘 (3.5 km)"
-           },
-           "items": [
-            {
-              "time": "09:00",
-              "name": "淺草寺散策",
-              "duration": 120,
-             "departure": "11:00",
-             "notice": ""
-           }
-          ]
+                "departure": "09:30",
+                "notice": ""
+              },
+              {
+                "time": "09:30",
+                "name": "深圳車公廟➔順德大良",
+                "duration": 140,
+                "departure": "11:50",
+                "notice": ""
+              },
+              {
+                "time": "07:00",
+                "name": "07:00",
+                "duration": 0,
+                "departure": "",
+                "notice": "香港➔深圳車公廟| 🟡未在Database找到「香港➔深圳車公廟」"
+              },
+              {
+                "time": "v3.0",
+                "name": "Current Version",
+                "duration": 0,
+                "departure": "",
+                "notice": ""
+              }
+            ],
+            "fitness": {
+              "totalSteps": 1679,
+              "totalWalkMin": 20,
+              "totalDistM": 1175,
+              "status": "🟢 輕鬆漫遊",
+              "summaryText": "🟢 輕鬆漫遊 | 預估步數: 1,679 步 | 總步行: 20 分鐘 (1.2 km)"
+            }
+          },
+          "2026-12-14": {
+            "items": [
+              {
+                "time": "10:00",
+                "name": "容边排骨饭二店",
+                "duration": 90,
+                "departure": "11:30",
+                "notice": "🔥 必吃招牌排骨飯"
+              },
+              {
+                "time": "11:30➔12:00",
+                "name": "大良➔容桂",
+                "duration": 30,
+                "departure": "12:00",
+                "notice": ""
+              }
+            ],
+            "fitness": {
+              "totalSteps": 8400,
+              "totalWalkMin": 60,
+              "totalDistM": 4200,
+              "status": "🟡 中度負荷",
+              "summaryText": "🟡 中度負荷 | 預估步數: 8,400 步 | 總步行: 60 分鐘 (4.2 km)"
+            }
+          },
+          "2026-12-15": {
+            "items": [
+              {
+                "time": "09:00",
+                "name": "未收錄的測試景點",
+                "duration": 60,
+                "departure": "10:00",
+                "notice": "測試無資料 Fallback"
+              }
+            ],
+            "fitness": {
+              "totalSteps": 1200,
+              "totalWalkMin": 15,
+              "totalDistM": 800,
+              "status": "🟢 輕鬆漫遊",
+              "summaryText": "🟢 輕鬆漫遊 | 預估步數: 1,200 步 | 總步行: 15 分鐘 (0.8 km)"
+            }
+          },
+          "2026-12-16": {
+            "items": [],
+            "fitness": {
+              "totalSteps": 0,
+              "totalWalkMin": 0,
+              "totalDistM": 0,
+              "status": "⚪ 自由活動",
+              "summaryText": "⚪ 自由活動日 | 無預排行程"
+            }
+          },
+          "2026-12-17": {
+            "items": [
+              {
+                "time": "14:00",
+                "name": "返程賦歸",
+                "duration": 120,
+                "departure": "16:00",
+                "notice": "結束行程"
+              }
+            ],
+            "fitness": {
+              "totalSteps": 3000,
+              "totalWalkMin": 30,
+              "totalDistM": 2000,
+              "status": "🟢 輕鬆漫遊",
+              "summaryText": "🟢 輕鬆漫遊 | 預估步數: 3,000 步 | 總步行: 30 分鐘 (2.0 km)"
+            }
+          }
+        }
+      },
+      "restaurants": {
+        "容边排骨饭二店": {
+          "ID": "CN-CAN-017",
+          "Name": "容边排骨饭二店",
+          "Local_Name": "容边排骨饭二店",
+          "City_Name": "廣州",
+          "Type": "餐廳",
+          "Rest_Type": "美食",
+          "District": "",
+          "Address": "容桂街道容山社区乐善北路4号D1001号",
+          "Lat": "",
+          "Lnng": "",
+          "Source_URL": "https://www.amap.com/",
+          "Platform": "高德地圖",
+          "Hours_summary": "一: 10:30-14:00,17:30-21:00\n二: 10:30-14:00,17:30-21:00",
+          "Hours_json": "{\"一\":\"10:30-14:00,17:30-21:00\"}",
+          "AvgCost": "¥44/人",
+          "Phone": "13630073441",
+          "website": "",
+          "Res_Mode": "可預約",
+          "Book_URL": "",
+          "Rating": "44",
+          "Comment_Count": "140",
+          "CriticalTime": "",
+          "Plan_B": "附近便利店",
+          "Duration": "60",
+          "Queue_Level": "中",
+          "SubSpots": "招牌排骨飯 [必點] | 陳皮骨 [特色]",
+          "Story": "當地人氣極高的排骨飯小店。",
+          "Menu_URL": "",
+          "Map Pinned": "Yes",
+          "Comment": "排隊人潮多，建議提早到。",
+          "Gmap_URL": "",
+          "ImageURL": "",
+          "Travel_Avg_Cost": "44",
+          "Day": "2",
+          "Time_Slot": "午餐",
+          "indoor_walk_load": "低"
+        },
+        "極端邊界測試餐廳": {
+          "ID": "CN-CAN-999",
+          "Name": "極端邊界測試餐廳",
+          "Local_Name": "",
+          "City_Name": "",
+          "Type": "",
+          "Rest_Type": "",
+          "District": "",
+          "Address": "",
+          "Lat": "",
+          "Lnng": "",
+          "Source_URL": "",
+          "Platform": "",
+          "Hours_summary": "",
+          "Hours_json": "",
+          "AvgCost": "",
+          "Phone": "",
+          "website": "",
+          "Res_Mode": "",
+          "Book_URL": "",
+          "Rating": "",
+          "Comment_Count": "",
+          "CriticalTime": "",
+          "Plan_B": "",
+          "Duration": "",
+          "Queue_Level": "",
+          "SubSpots": "",
+          "Story": "",
+          "Menu_URL": "",
+          "Map Pinned": "",
+          "Comment": "",
+          "Gmap_URL": "",
+          "ImageURL": "",
+          "Travel_Avg_Cost": "",
+          "Day": "",
+          "Time_Slot": "",
+          "indoor_walk_load": ""
+        }
+      },
+      "attractions": {
+        "順峰山公園": {
+          "ID": "ATT-101",
+          "Name": "順峰山公園",
+          "Local_Name": "順峰山公園",
+          "City_Name": "佛山",
+          "Type": "觀光景點",
+          "Rest_Type": "公園",
+          "District": "大良",
+          "Address": "佛山市順德區南國東路",
+          "Lat": "22.80",
+          "Lnng": "113.25",
+          "Source_URL": "",
+          "Platform": "Google Maps",
+          "Hours_summary": "06:30-22:30",
+          "Hours_json": "{}",
+          "AvgCost": "¥0/人",
+          "Phone": "",
+          "website": "",
+          "Res_Mode": "免預約",
+          "Book_URL": "",
+          "Rating": "4.6",
+          "Comment_Count": "520",
+          "CriticalTime": "",
+          "Plan_B": "",
+          "Duration": "120",
+          "Queue_Level": "",
+          "SubSpots": "中華第一牌坊 [地標] | 青雲湖 [散步]",
+          "Story": "集 散步、賞景於一體的巨大休閒公園。",
+          "Menu_URL": "",
+          "Map Pinned": "Yes",
+          "Comment": "風景優美，適合拍照。",
+          "Gmap_URL": "https://maps.google.com/?q=Shunfeng+Mountain+Park",
+          "ImageURL": "",
+          "Travel_Avg_Cost": "0",
+          "Day": "2",
+          "Time_Slot": "下午",
+          "indoor_walk_load": "中"
+        }
+      },
+      "transport": {
+        "香港➔深圳車公廟": {
+          "ID": "ID-001",
+          "Day": "1",
+          "From": "香港",
+          "To": "深圳車公廟",
+          "Route_Key": "香港➔深圳車公廟",
+          "Time": "150",
+          "FC": "¥",
+          "Fee": "17.68",
+          "Shortcut": "https://www.google.com/maps",
+          "特定班次": "**09:00**,09:25,09:50",
+          "Remarks": "IC Card required",
+          "TimeTable": "https://japantravel.navitime.com/",
+          "TimeTable_pic_url": "1",
+          "VideoURL": "",
+          "RouteTips": "搭乘東鐵線轉地鐵",
+          "walk_dist_m": "200",
+          "walk_time_min": "5",
+          "difficulty_load": "1",
+          "UpdatedAt": "2026-11-09",
+          "JSON": "{\"total_duration_min\": 75, \"fare\": \"17.68\"}",
+          "time backup": "78"
+        },
+        "深圳車公廟➔順德大良": {
+          "ID": "ID-002",
+          "Day": "1",
+          "From": "深圳車公廟",
+          "To": "順德大良",
+          "Route_Key": "深圳車公廟➔順德大良",
+          "Time": "140",
+          "FC": "¥",
+          "Fee": "35",
+          "Shortcut": "",
+          "特定班次": "",
+          "Remarks": "",
+          "TimeTable": "",
+          "TimeTable_pic_url": "",
+          "VideoURL": "",
+          "RouteTips": "",
+          "walk_dist_m": "650",
+          "walk_time_min": "12",
+          "difficulty_load": "1",
+          "UpdatedAt": "",
+          "JSON": "{\"total_duration_min\": 140, \"fare\": \"35\"}",
+          "time backup": "5"
         }
       }
-    },
-  "restaurants": {
-    "一蘭拉麵": {
-      "ID": "JP-TYO-001",
-      "Name": "一蘭拉麵",
-      "Local_Name": "一蘭 浅草店",
-      "City_Name": "東京",
-      "Type": "餐廳",
-      "Rest_Type": "拉麵",
-      "District": "台東區",
-      "Address": "東京都台東区浅草1-1-1",
-      "Hours_summary": "一至日: 24小時",
-      "Hours_json": "{}",
-      "AvgCost": "¥1,200/人",
-      "Rating": "4.2",
-      "Comment_Count": "350",
-      "Res_Mode": "免預約",
-      "SubSpots": "",
-      "Gmap_URL": "https://maps.google.com/?q=Ichiran",
-      "ImageURL": "https://images.unsplash.com/photo-1569718212165-3a8278d5f624",
-      "Duration": "60"
-    }
-  },
-  "attractions": {
-    "淺草寺": {
-      "ID": "JP-TYO-002",
-      "Name": "淺草寺",
-      "Local_Name": "金龍山浅草寺",
-      "City_Name": "東京",
-      "Type": "景點",
-      "Rest_Type": "觀光",
-      "District": "台東區",
-      "Address": "東京都台東区浅草2-3-1",
-      "Hours_summary": "全日開放",
-      "Hours_json": "{}",
-      "AvgCost": "免費",
-      "Rating": "4.6",
-      "Comment_Count": "1200",
-      "Res_Mode": "自由參觀",
-      "SubSpots": "雷門|宝蔵門|本堂",
-      "Gmap_URL": "https://maps.google.com/?q=Senso-ji",
-      "ImageURL": "https://images.unsplash.com/photo-1590534967359-5f7253457a77",
-      "Duration": "90"
-    }
-  },
-  "transport": {
-    "香港➔深圳車公廟": {
-      "ID": "TR-001",
-      "Day": "1",
-      "From": "香港",
-      "To": "深圳車公廟",
-      "Route_Key": "香港➔深圳車公廟",
-      "Time": "150",
-      "Fee": "50.00",
-      "特定班次": "**07:00**,09:30",
-      "Shortcut": "https://..."
-    }
-  }
-};
+    };
   </script>
 </body>
 </html>
