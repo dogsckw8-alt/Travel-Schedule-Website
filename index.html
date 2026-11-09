@@ -27,7 +27,9 @@
     }
   </script>
   <style>
-    /* 預設為 Japandi 沉浸暗色調 */
+    /* ----------------------------------------------------
+       1. 根目錄 CSS 變數定義 (Theme Design Tokens)
+       ---------------------------------------------------- */
     :root {
       --bg-main: #0F1115;
       --card-bg: #161920;
@@ -37,7 +39,6 @@
       --inner-box-bg: rgba(30, 41, 59, 0.6);
     }
 
-    /* 戶外強光高對比日間模式 (Light Mode) */
     body.light-mode {
       --bg-main: #F1F5F9;
       --card-bg: #FFFFFF;
@@ -46,7 +47,10 @@
       --text-muted: #334155;
       --inner-box-bg: #E2E8F0;
     }
-      
+
+    /* ----------------------------------------------------
+       2. 全域基礎樣式
+       ---------------------------------------------------- */
     body {
       font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
       -webkit-tap-highlight-color: transparent;
@@ -55,34 +59,27 @@
       transition: background-color 0.3s ease, color 0.3s ease;
     }
 
-    /* 通用卡片類別：直接套用 CSS 變數 */
+    .no-scrollbar::-webkit-scrollbar { display: none; }
+    .no-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
+
+    /* ----------------------------------------------------
+       3. 通用卡片與互動元件
+       ---------------------------------------------------- */
     .touch-card {
       background-color: var(--card-bg) !important;
       border-color: var(--card-border) !important;
       color: var(--text-primary) !important;
       transition: transform 0.15s ease, box-shadow 0.15s ease, opacity 0.3s ease;
-      touch-action: pan-y; /* 鎖定縱向捲動，允許橫向 Pointer 手勢 */
+      touch-action: pan-y;
     }
 
-    /* 確保 Light 模式下 Bento 內部的文字與標籤強制清晰 */
     body.light-mode .touch-card {
       box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05), 0 2px 4px -1px rgba(0, 0, 0, 0.03);
     }
-    
-    /* Bento Grid 內部小方格適配 */
-    body.light-mode .bg-slate-800\/60,
-    body.light-mode .bg-slate-900 {
-      background-color: var(--inner-box-bg) !important;
-      border-color: var(--card-border) !important;
-    }
-    /* Light Mode 下的細節文字優化 */
-    body.light-mode .text-slate-400 {
-      color: #475569 !important; /* 將原本偏暗的灰色改為 Slate-600 */
-    }
-    body.light-mode .text-slate-300 {
-      color: #1E293B !important; /* 將次要白字改為深色 Slate-800 */
-    }
-    /* 確保 Light 模式下 Modal 與 Header 背景正確 */
+
+    /* ----------------------------------------------------
+       4. Light Mode 頂部導航與表單/Sheet 適配
+       ---------------------------------------------------- */
     body.light-mode header,
     body.light-mode nav {
       background-color: rgba(248, 250, 252, 0.9) !important;
@@ -94,90 +91,86 @@
       border-color: #CBD5E1 !important;
       color: #0F172A !important;
     }
-    
-    /* Light Mode 重要資訊對比強化 */
-    body.light-mode h2,
-    body.light-mode h3,
-    body.light-mode .touch-card h2,
-    body.light-mode .touch-card h3 {
-      color: #020617 !important; /* 卡片 Heading 轉為極深近黑色，絕對清晰 */
-    }
 
-    /* Timeline 時間標籤（左側時間）在 Light mode 下改為近黑色並加粗 */
-    body.light-mode #timeline-container span[style*="tabular-nums"] {
-      color: #0F172A !important;
-      font-weight: 900 !important;
-    }
-
-    /* 調整 Light Mode 下的琥珀色/焦糖色文字（加粗 + 高對比焦糖色） */
-    body.light-mode .text-amber-400,
-    body.light-mode .text-amber-300 {
-      color: #B45309 !important; /* 深焦糖色 (Amber-700)，在白底上有極佳辨識度 */
-      font-weight: 800 !important;
-    }
-
-    .no-scrollbar::-webkit-scrollbar {
-      display: none;
-    }
-    .no-scrollbar {
-      -ms-overflow-style: none;
-      scrollbar-width: none;
-    }
-    
-    /* =================================================   
-       Light Mode 專用膠囊與標籤顏色微調 (提升和諧度與辨識度) 
-       ================================================ */
-    body.light-mode .bg-rose-950\/90,
-    body.light-mode .bg-rose-950\/80 {
-      background-color: #FEE2E2 !important; /* 柔和淺紅底 */
-      border-color: #F87171 !important;     /* 紅色邊框 */
-      color: #991B1B !important;            /* 深紅高對比字色 */
-    }
-
-    body.light-mode .bg-indigo-950\/90,
-    body.light-mode .bg-indigo-950\/80 {
-      background-color: #E0E7FF !important; /* 柔和淺藍紫底 */
-      border-color: #818CF8 !important;     /* 藍紫邊框 */
-      color: #3730A3 !important;            /* 深藍紫高對比字色 */
-    }
-
-    body.light-mode .bg-slate-800 {
-      background-color: #E2E8F0 !important; /* 淺灰藍底 (對應地鐵/路線標籤) */
-      border-color: #CBD5E1 !important;
-      color: #0F172A !important;            /* 近黑色字體確保極佳清晰度 */
-    }
-    
-    body.light-mode .bg-emerald-950\/80 {
-      background-color: #D1FAE5 !important; /* 柔和淺綠底 */
-      border-color: #34D399 !important;
-      color: #065F46 !important;            /* 深綠高對比字色 */
-    }
-
-    body.light-mode .bg-amber-950\/80 {
-      background-color: #FEF3C7 !important; /* 柔和淺黃/琥珀底 */
-      border-color: #FBBF24 !important;
-      color: #92400E !important;            /* 深琥珀/焦糖色字體 */
-    }
-
-    /* =================================================   
-       Light Mode 頂部右側膠囊按鈕配色優化 
-       ================================================ */
-    body.light-mode header button#theme-toggle-btn {
-      background-color: #E2E8F0 !important; /* 柔和淺灰藍底 (Slate-200) */
-      border-color: #CBD5E1 !important;     /* 邊框色 */
-      color: #92400E !important;            /* 溫潤的焦糖色字體 */
-    }
-
+    body.light-mode header button#theme-toggle-btn,
     body.light-mode header button[onclick="fetchLatestData()"],
     body.light-mode header .bg-brand-surface {
       background-color: #E2E8F0 !important;
       border-color: #CBD5E1 !important;
     }
 
-    /* 針對 Mock 模式或其他狀態膠囊在 Light mode 下的文字對比強化 */
     body.light-mode header span#sync-text {
-      color: #334155 !important;            /* 深灰次要文字確保清晰 */
+      color: #334155 !important;
       font-weight: 700 !important;
+    }
+
+    /* ----------------------------------------------------
+       5. Light Mode 結構與文字對比強化 (Bento & Headings)
+       ---------------------------------------------------- */
+    body.light-mode .bg-slate-800\/60,
+    body.light-mode .bg-slate-900 {
+      background-color: var(--inner-box-bg) !important;
+      border-color: var(--card-border) !important;
+    }
+
+    body.light-mode .text-slate-400 { color: #475569 !important; }
+    body.light-mode .text-slate-300 { color: #1E293B !important; }
+
+    body.light-mode h2,
+    body.light-mode h3,
+    body.light-mode .touch-card h2,
+    body.light-mode .touch-card h3 {
+      color: #020617 !important;
+    }
+
+    body.light-mode #timeline-container span[style*="tabular-nums"] {
+      color: #0F172A !important;
+      font-weight: 900 !important;
+    }
+
+    body.light-mode .text-amber-400,
+    body.light-mode .text-amber-300 {
+      color: #B45309 !important;
+      font-weight: 800 !important;
+    }
+
+    /* ----------------------------------------------------
+       6. Light Mode 專用膠囊與標籤顏色微調 (合併同類項)
+       ---------------------------------------------------- */
+    body.light-mode .bg-rose-950\/90,
+    body.light-mode .bg-rose-950\/80 {
+      background-color: #FEE2E2 !important;
+      border-color: #F87171 !important;
+      color: #991B1B !important;
+    }
+
+    body.light-mode .bg-indigo-950\/90,
+    body.light-mode .bg-indigo-950\/80 {
+      background-color: #E0E7FF !important;
+      border-color: #818CF8 !important;
+      color: #3730A3 !important;
+    }
+
+    body.light-mode .bg-slate-800 {
+      background-color: #E2E8F0 !important;
+      border-color: #CBD5E1 !important;
+      color: #0F172A !important;
+    }
+
+    body.light-mode .bg-emerald-950\/80 {
+      background-color: #D1FAE5 !important;
+      border-color: #34D399 !important;
+      color: #065F46 !important;
+    }
+
+    body.light-mode .bg-amber-950\/80 {
+      background-color: #FEF3C7 !important;
+      border-color: #FBBF24 !important;
+      color: #92400E !important;
+    }
+
+    body.light-mode header button#theme-toggle-btn {
+      color: #92400E !important;
     }
   </style>
 </head>
