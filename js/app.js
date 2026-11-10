@@ -53,7 +53,7 @@ export async function fetchLatestData() {
 
   try {
     // ⚠️ 請將此處替換為你實際部署的 GAS 網關網址 (/exec)
-    const GAS_WEB_APP_URL = `https://script.google.com/macros/s/你的GAS部署ID/exec?trip=${trip}&key=${key}`;
+    const GAS_WEB_APP_URL = `https://script.google.com/macros/s/AKfycbyFlwIFCfcbA3yj2NzoL7B0aC1AG3PKZiktkXRYXD1-Z0q_0vFFt1TA2CJFfHjVfjHG/exec?trip=${trip}&key=${key}`;
     
     const response = await fetch(GAS_WEB_APP_URL);
     if (!response.ok) throw new Error(`HTTP error! status: ${response.status}`);
