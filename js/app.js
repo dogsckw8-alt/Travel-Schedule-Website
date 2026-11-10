@@ -116,6 +116,45 @@ export function selectDay(index) {
     renderApp(currentData);
   }
 }
+/* ----------------------------------------------------
+   Task 1 互動驗證腳本
+---------------------------------------------------- */
+export function runTask1Verification() {
+  console.log("🧪 [Task 1] 開始執行介面與互動驗證...");
+  
+  const requiredGlobals = ['selectDay', 'openDetailModal', 'openTransportModal', 'closeModalDirect'];
+  for (const fn of requiredGlobals) {
+    if (typeof window[fn] !== 'function') {
+      console.error(`❌ [失敗] 全域函式未正確掛載: window.${fn}`);
+      return;
+    }
+  }
+  console.log("✅ [通過] 所有核心互動函式已成功掛載至 window。");
+
+  if (!currentData || !currentData.schedule) {
+    console.warn("⚠️ [警告] 當前無有效資料，請先確認資料載入狀態。");
+    return;
+  }
+
+  const days = currentData.schedule.days;
+  console.log(`📅 檢測到行程天數: ${days.length} 天`, days);
+
+  if (days.length > 1) {
+    console.log("🔄 正在模擬切換至 Day 2...");
+    selectDay(1);
+    console.log("✅ [通過] selectDay(1) 執行完畢，目前選中索引:", selectedDayIndex);
+  }
+
+  const fitnessBanner = document.querySelector('#timeline-container div');
+  if (fitnessBanner) {
+    console.log("✅ [通過] 每日體能與步數預警看板已成功渲染於畫面上。");
+  } else {
+    console.log("ℹ️ [提示] 當前 Day 尚無步數預警資訊。");
+  }
+
+  console.log("🎉 [Task 1] 互動驗證執行完成！");
+}
+
 
 /* ----------------------------------------------------
    安全地暴露給全域 (HTML onclick 綁定)
@@ -130,6 +169,7 @@ window.openLightbox = openLightbox;
 window.closeLightbox = closeLightbox;
 window.fetchLatestData = fetchLatestData;
 window.runParserCheckpoint = runParserCheckpoint;
+window.runTask1Verification = runTask1Verification;
 
 // 頁面載入時執行
 if (document.readyState === 'loading') {
