@@ -902,11 +902,17 @@ export function closeLightbox() {
 }
 
 /* ----------------------------------------------------
-   Modal 彈窗顯示/關閉控制
+   Modal 彈窗顯示/關閉控制 - adjust sticky-time-header display logic
 ---------------------------------------------------- */
 export function showModal() {
   const overlay = document.getElementById('modal-overlay');
   const sheet = document.getElementById('modal-sheet');
+  const stickyHeader = document.getElementById('sticky-time-header'); // 取得底部當前進度膠囊
+  
+  if (stickyHeader) {
+    stickyHeader.classList.add('translate-y-20', 'opacity-0'); // 進入 Layer 2 時隱藏
+  }
+
   if (overlay && sheet) {
     overlay.classList.remove('hidden');
     setTimeout(() => {
