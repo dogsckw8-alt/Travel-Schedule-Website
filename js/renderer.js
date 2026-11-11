@@ -10,6 +10,7 @@ import {
   formatMins, 
   formatFeeDisplay, 
   formatHoursDisplay,
+  parseSingleDayHours,
   extractTargetClass, 
   parseTimetableList, 
   parseSubSpots, 
@@ -439,8 +440,11 @@ export function openDetailModal(itemName, slotTime = '', isBackNavigation = fals
 
   const currentDateStr = currentData.schedule.days[selectedDayIndex];
   const dateObj = new Date(currentDateStr);
-  const weekKey = WEEK_KEYS[dateObj.getDay()];
-  const todayHours = dbItem[weekKey] || dbItem.Hours_summary || dbItem.Hours || '請參考官方說明';
+  const weekKey = WEEK_KEYS[dateObj.getDay()]; // 例如 "週一" 或 "一"
+  
+  // 取得原始營業時間並透過 parser 過濾出當天營業時間
+  const rawHours = dbItem[weekKey] || dbItem.Hours_summary || dbItem.Hours || '請參考官方說明';
+  const todayHours = parseSingleDayHours(rawHours, weekKey);
 
   const itemType = (dbItem.Type || dbItem['Rest.Type'] || '').toLowerCase();
   const isRestaurant = itemType.includes('餐廳') || itemType.includes('燒肉') || itemType.includes('壽司') || itemType.includes('拉麵') || dbItem.Rating;
