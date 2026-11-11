@@ -902,15 +902,17 @@ export function closeLightbox() {
 }
 
 /* ----------------------------------------------------
-   Modal 彈窗顯示/關閉控制 - adjust sticky-time-header display logic
+   Modal 彈窗顯示/關閉控制 - adjust sticky-time-header display logic v2.0
 ---------------------------------------------------- */
 export function showModal() {
   const overlay = document.getElementById('modal-overlay');
   const sheet = document.getElementById('modal-sheet');
-  const stickyHeader = document.getElementById('sticky-time-header'); // 取得底部當前進度膠囊
+  const stickyHeader = document.getElementById('sticky-time-header');
   
   if (stickyHeader) {
-    stickyHeader.classList.add('translate-y-20', 'opacity-0'); // 進入 Layer 2 時隱藏
+    // 必須先移除顯示用的 class，才能讓隱藏的 translate-y-20 與 opacity-0 生效
+    stickyHeader.classList.remove('translate-y-0', 'opacity-100');
+    stickyHeader.classList.add('translate-y-20', 'opacity-0');
   }
 
   if (overlay && sheet) {
