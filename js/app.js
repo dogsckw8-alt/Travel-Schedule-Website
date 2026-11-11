@@ -87,6 +87,19 @@ export async function fetchLatestData() {
   }
 }
 
+// 註冊 Service Worker 以支援 PWA 離線瀏覽
+if ('serviceWorker' in navigator) {
+  window.addEventListener('load', () => {
+    navigator.serviceWorker.register('./sw.js')
+      .then((registration) => {
+        console.log('Service Worker 註冊成功，Scope:', registration.scope);
+      })
+      .catch((error) => {
+        console.error('Service Worker 註冊失敗:', error);
+      });
+  });
+}
+
 /**
  * 內部輔助：載入 Mock 測試模式的統一函式
  */
