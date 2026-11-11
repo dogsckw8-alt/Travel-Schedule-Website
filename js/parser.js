@@ -119,6 +119,44 @@ export function formatHoursDisplay(hoursStr) {
   return str.replace(/(\d{1,2}:\d{2}\s*[-~～]\s*\d{1,2}:\d{2})[\s,;/]+(\d{1,2}:\d{2}\s*[-~～]\s*\d{1,2}:\d{2})/g, '$1\n$2');
 }
 
+// 精準解析單日營業時間
+export function parseSingleDayHours(rawHours, weekKey) {
+  if (!rawHours) return '請參考官方說明';
+
+  // 1. 嘗試解析 JSON 格式
+  try {
+    if (typeof rawHours === 'string' && rawHours.trim().startsWith('{')) {
+      const hoursObj = JSON.parse(rawHours);
+      if (hoursObj[weekKey]) return hoursObj[weekKey];
+      const shortKey = weekKey.replace('週', '');
+      if (hoursObj[shortKey]) return hoursObj[shortKey];
+    } else if (typeof rawHours === 'object' && rawHours !== null) {
+      if (rawHours[weekKey]) return rawHours[weekKey];
+      const shortKey = weekKey.replace('週', '');
+      if (rawHours[shortKey]) return rawHours[shortKey];
+    }
+  } catch (e) {
+    // 忽略 JSON 解析錯誤，繼續往下走文字匹配
+  }
+
+  const rawStr = String(rawHours);
+
+  // 2. 處理多行文字格式 (例如 "一: 10:30-14:00\n二: 10:30-14:00")
+  const lines = rawStr.split(/\r?\n/);
+  for (const line of lines) {
+    if (line.includes(weekKey) || line.includes(weekKey.replace('週', ''))) {
+      const parts = line.split(/[:：]/);
+      if (parts.length > 1) {
+        return parts.slice(1).join(':').trim();
+      }
+      return line.trim();
+    }
+  }
+
+  // 3. 如果找不到特定天數且字串包含多個時段或不含換行，回傳原字串或預設值
+  return rawStr;
+}
+
 /* ----------------------------------------------------
    班次提取與高亮解析輔助函數
 ---------------------------------------------------- */
