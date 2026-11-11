@@ -10,7 +10,7 @@ import {
   closeModal, 
   closeModalDirect 
 } from './renderer.js';
-import { runParserCheckpoint } from './parser.js';
+import { runParserCheckpoint,toggleSubspotCheck, getSubspotCheckKey } from './parser.js';
 
 /* ----------------------------------------------------
    全域應用狀態 (App State)
@@ -170,6 +170,8 @@ window.closeLightbox = closeLightbox;
 window.fetchLatestData = fetchLatestData;
 window.runParserCheckpoint = runParserCheckpoint;
 window.runTask1Verification = runTask1Verification;
+window.toggleSubspotCheck = toggleSubspotCheck;
+window.getSubspotCheckKey = getSubspotCheckKey;
 
 // 頁面載入時執行
 if (document.readyState === 'loading') {
